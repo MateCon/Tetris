@@ -11,12 +11,11 @@ class TetrisGame:
         charMatrix = self.playfield.asCharMatrix()
 
         def callback(point):
-            charMatrix[len(charMatrix) - point.y][point.x - 1] = 'x'
+            charMatrix[len(charMatrix) - point.y - 1][point.x] = 'x'
 
         self.currentPiece.do(callback)
 
         return [''.join(row) for row in charMatrix]
-
 
 
 class Playfield:
@@ -26,16 +25,16 @@ class Playfield:
 
     def pieceStartingPositionWithDimensions(self, someDimensions):
         return Point((self.width - someDimensions.x) // 2,
-                     self.height + (2 - someDimensions.y)).plus(Point(1, 1))
+                     self.height + (2 - someDimensions.y))
 
     def asCharMatrix(self) -> list[list[str]]:
         stringList = []
 
-        for y in range(1, self.height + 2 + 1):
+        for y in range(self.height + 2):
             currentRow = []
-            for _ in range(1, self.width + 1):
+            for _ in range(self.width):
                 currentCharacter = '.'
-                if y > self.height:
+                if y >= self.height:
                     currentCharacter = '-'
                 currentRow.append(currentCharacter)
             stringList.insert(0, currentRow)

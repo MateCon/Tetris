@@ -10,6 +10,7 @@ class Rand(ABC):
 class RandStub(Rand):
     def __init__(self, someValues):
         self.values = someValues
+        self.values.reverse()
 
     def nextInteger(self):
-        return self.values.pop(0)
+        return self.values.pop()
