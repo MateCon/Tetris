@@ -132,3 +132,61 @@ class TestTetrisGame:
             "..........",
             "..........",
         ]
+
+    def test11_PieceMovesDownAfterTick(self):
+        random = RandStub([2])
+        game = TetrisGame(10, 4, random)
+
+        game.tick()
+
+        assert game.asStringList() == [
+            "----------",
+            "---x------",
+            "...xxx....",
+            "..........",
+            "..........",
+            "..........",
+        ]
+
+    def test12_NewPieceSpawnsWhenCurrentPieceIsBlockedByGround(self):
+        random = RandStub([2, 1])
+        game = TetrisGame(10, 4, random)
+
+        game.tick()
+        game.tick()
+        game.tick()
+        game.tick()
+        game.tick()
+
+        assert game.asStringList() == [
+            "---xxxx---",
+            "----------",
+            "..........",
+            "..........",
+            "...x......",
+            "...xxx....",
+        ]
+
+    def test13_PiecesCanBeStackedOnTopOfEachOther(self):
+        random = RandStub([2, 1, 3])
+        game = TetrisGame(10, 4, random)
+
+        game.tick()
+        game.tick()
+        game.tick()
+        game.tick()
+        game.tick()
+
+        game.tick()
+        game.tick()
+        game.tick()
+        game.tick()
+
+        assert game.asStringList() == [
+            "-----x----",
+            "---xxx----",
+            "..........",
+            "...xxxx...",
+            "...x......",
+            "...xxx....",
+        ]
