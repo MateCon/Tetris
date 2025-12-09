@@ -190,3 +190,95 @@ class TestTetrisGame:
             "...x......",
             "...xxx....",
         ]
+
+    def test14_PiecesCanMoveRight(self):
+        game = TetrisGame(10, 4, RandStub([1]))
+
+        game.moveRight()
+
+        assert game.asStringList() == [
+            "----xxxx--",
+            "----------",
+            "..........",
+            "..........",
+            "..........",
+            "..........",
+        ]
+
+    def test15_PiecesCanNotMoveRightThroughTheWall(self):
+        game = TetrisGame(10, 4, RandStub([1]))
+
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+
+        assert game.asStringList() == [
+            "------xxxx",
+            "----------",
+            "..........",
+            "..........",
+            "..........",
+            "..........",
+        ]
+
+    def test16_PiecesCanMoveLeft(self):
+        game = TetrisGame(10, 4, RandStub([1]))
+
+        game.moveLeft()
+
+        assert game.asStringList() == [
+            "--xxxx----",
+            "----------",
+            "..........",
+            "..........",
+            "..........",
+            "..........",
+        ]
+
+    def test17_PiecesCanNotMoveLeftThroughTheWall(self):
+        game = TetrisGame(10, 4, RandStub([1]))
+
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+
+        assert game.asStringList() == [
+            "xxxx------",
+            "----------",
+            "..........",
+            "..........",
+            "..........",
+            "..........",
+        ]
+
+    def test18_PieceCanSoftDropBetweenTicks(self):
+        random = RandStub([2])
+        game = TetrisGame(10, 4, random)
+
+        game.softDrop()
+
+        assert game.asStringList() == [
+            "----------",
+            "---x------",
+            "...xxx....",
+            "..........",
+            "..........",
+            "..........",
+        ]
+
+    def test19_PiecesCanHardDrop(self):
+        random = RandStub([2, 1])
+        game = TetrisGame(10, 4, random)
+
+        game.hardDrop()
+
+        assert game.asStringList() == [
+            "---xxxx---",
+            "----------",
+            "..........",
+            "..........",
+            "...x......",
+            "...xxx....",
+        ]

@@ -8,12 +8,24 @@ class TetrisGame:
         self.pieceGenerator = PieceGenerator(self.playfield, self.randomizer)
         self.currentPiece = self.pieceGenerator.nextPiece()
 
+    def freezeCurrentPiece(self):
+        self.playfield.addBlocks(self.currentPiece)
+        self.currentPiece = self.pieceGenerator.nextPiece()
+
     def tick(self):
-        if self.currentPiece.canMoveDown():
-            self.currentPiece.moveDown()
-        else:
-            self.playfield.addBlocks(self.currentPiece)
-            self.currentPiece = self.pieceGenerator.nextPiece()
+        self.softDrop()
+
+    def moveRight(self):
+        self.currentPiece.move(Point(1, 0))
+
+    def moveLeft(self):
+        self.currentPiece.move(Point(-1, 0))
+
+    def softDrop(self):
+        self.currentPiece.moveIfCantMove(Point(0, -1), self.freezeCurrentPiece)
+
+    def hardDrop(self):
+        self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.hardDrop, self.freezeCurrentPiece)
 
     def asStringList(self):
         charMatrix = self.playfield.asCharMatrix()
@@ -41,6 +53,9 @@ class Playfield:
     def pieceStartingPositionWithDimensions(self, someDimensions):
         return Point((self.width - someDimensions.x) // 2,
                      self.height + (2 - someDimensions.y))
+
+    def pointIsInArea(self, aPoint):
+        return aPoint.x >= 0 and aPoint.x < self.width and aPoint.y >= 0 and aPoint.y < self.height + 2
 
     def addBlock(self, position):
         self.blocks[position.y][position.x] = True
@@ -90,15 +105,25 @@ class Piece:
                 return False
         return True
 
-    def moveDown(self):
-        self.position = self.position + Point(0, -1)
+    def canBlockMove(self, blockPosition, anOffset):
+        newPosition = blockPosition + anOffset 
+        return self.playfield.pointIsInArea(newPosition) and not self.playfield.hasBlockIn(newPosition)
 
-    def canBlockMoveDown(self, blockPosition):
-        newPosition = blockPosition + Point(0, -1)
-        return newPosition.y >= 0 and not self.playfield.hasBlockIn(newPosition)
+    def canMove(self, anOffset):
+        return self.allSatisfy(lambda blockPosition: self.canBlockMove(blockPosition, anOffset))
 
-    def canMoveDown(self):
-        return self.allSatisfy(self.canBlockMoveDown)
+    def moveIfCanMoveIfCantMove(self, anOffset, aHandlerWhenCanMove, aHandlerWhenCantMove):
+        if self.canMove(anOffset):
+            self.position = self.position + anOffset
+            aHandlerWhenCanMove()
+        else:
+            aHandlerWhenCantMove()
+
+    def moveIfCantMove(self, anOffset, aHandlerWhenCantMove):
+        self.moveIfCanMoveIfCantMove(anOffset, lambda: None, aHandlerWhenCantMove)
+
+    def move(self, anOffset):
+        self.moveIfCantMove(anOffset, lambda: None)
 
 
 class PieceGenerator:
