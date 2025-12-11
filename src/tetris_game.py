@@ -1,16 +1,25 @@
-from shapes import Point
+from piece_generator import PieceGenerator
+from playfield import Playfield
+from point import Point
 
 
 class TetrisGame:
-    def __init__(self, aWidth, aHeight, aRandomizer):
+    def __init__(self, aWidth, aHeight, aRandomizer, aRotationListGeneratorClass, aKickAlgorithmClass):
         self.playfield = Playfield(aWidth, aHeight)
         self.randomizer = aRandomizer
-        self.pieceGenerator = PieceGenerator(self.playfield, self.randomizer)
+        self.kickAlgoritm = aKickAlgorithmClass(self.playfield)
+        self.pieceGenerator = PieceGenerator(
+            self.playfield,
+            self.randomizer,
+            aRotationListGeneratorClass(),
+            self.kickAlgoritm
+        )
         self.currentPiece = self.pieceGenerator.nextPiece()
 
     def freezeCurrentPiece(self):
         self.playfield.addBlocks(self.currentPiece)
         self.currentPiece = self.pieceGenerator.nextPiece()
+        self.checkForClearedLines()
 
     def tick(self):
         self.softDrop()
@@ -21,167 +30,29 @@ class TetrisGame:
     def moveLeft(self):
         self.currentPiece.move(Point(-1, 0))
 
+    def rotateRight(self):
+        self.currentPiece.rotateRight()
+
+    def rotateLeft(self):
+        self.currentPiece.rotateLeft()
+
     def softDrop(self):
         self.currentPiece.moveIfCantMove(Point(0, -1), self.freezeCurrentPiece)
 
     def hardDrop(self):
         self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.hardDrop, self.freezeCurrentPiece)
 
+    def checkForClearedLines(self):
+        self.playfield.checkForClearedLines()
+
     def asStringList(self):
         charMatrix = self.playfield.asCharMatrix()
 
         def callback(point):
-            charMatrix[len(charMatrix) - point.y - 1][point.x] = 'x'
+            if self.playfield.pointIsInDisplayableArea(point):
+                charMatrix[len(charMatrix) - point.y - 1][point.x] = self.currentPiece.activeCharacter()
 
         self.currentPiece.do(callback)
 
         return [''.join(row) for row in charMatrix]
 
-
-class Playfield:
-    def __init__(self, aWidth, aHeight):
-        self.width = aWidth
-        self.height = aHeight
-        self.blocks = []
-
-        for _ in range(self.height + 2):
-            currentRow = []
-            for _ in range(self.width):
-                currentRow.append(False)
-            self.blocks.insert(0, currentRow)
-
-    def pieceStartingPositionWithDimensions(self, someDimensions):
-        return Point((self.width - someDimensions.x) // 2,
-                     self.height + (2 - someDimensions.y))
-
-    def pointIsInArea(self, aPoint):
-        return aPoint.x >= 0 and aPoint.x < self.width and aPoint.y >= 0 and aPoint.y < self.height + 2
-
-    def addBlock(self, position):
-        self.blocks[position.y][position.x] = True
-
-    def hasBlockIn(self, position):
-        return self.blocks[position.y][position.x]
-
-    def addBlocks(self, currentPiece):
-        currentPiece.do(lambda position: self.addBlock(position))
-
-    def asCharMatrix(self) -> list[list[str]]:
-        stringList = []
-
-        for y in range(self.height + 2):
-            currentRow = []
-            for x in range(self.width):
-                currentCharacter = '.'
-                if y >= self.height:
-                    currentCharacter = '-'
-                if self.blocks[y][x]:
-                    currentCharacter = 'x'
-                currentRow.append(currentCharacter)
-            stringList.insert(0, currentRow)
-
-        return stringList
-
-
-class Piece:
-    def __init__(self, aPosition, someSquareOffsets, aPlayfield):
-        self.position = aPosition
-        self.squareOffsets = someSquareOffsets
-        self.playfield = aPlayfield
-
-    def includes(self, aPosition):
-        for squareOffset in self.squareOffsets:
-            if self.position + squareOffset == aPosition:
-                return True
-        return False
-
-    def do(self, aCallback):
-        for squareOffset in self.squareOffsets:
-            aCallback(self.position + squareOffset)
-
-    def allSatisfy(self, aCallback):
-        for squareOffset in self.squareOffsets:
-            if not aCallback(self.position + squareOffset):
-                return False
-        return True
-
-    def canBlockMove(self, blockPosition, anOffset):
-        newPosition = blockPosition + anOffset 
-        return self.playfield.pointIsInArea(newPosition) and not self.playfield.hasBlockIn(newPosition)
-
-    def canMove(self, anOffset):
-        return self.allSatisfy(lambda blockPosition: self.canBlockMove(blockPosition, anOffset))
-
-    def moveIfCanMoveIfCantMove(self, anOffset, aHandlerWhenCanMove, aHandlerWhenCantMove):
-        if self.canMove(anOffset):
-            self.position = self.position + anOffset
-            aHandlerWhenCanMove()
-        else:
-            aHandlerWhenCantMove()
-
-    def moveIfCantMove(self, anOffset, aHandlerWhenCantMove):
-        self.moveIfCanMoveIfCantMove(anOffset, lambda: None, aHandlerWhenCantMove)
-
-    def move(self, anOffset):
-        self.moveIfCantMove(anOffset, lambda: None)
-
-
-class PieceGenerator:
-    def __init__(self, aPlayfield, aRandomizer):
-        self.playfield = aPlayfield
-        self.randomizer = aRandomizer
-
-    def createIPiece(self):
-        return Piece(
-            self.playfield.pieceStartingPositionWithDimensions(Point(4, 1)),
-            [Point(0, 0), Point(1, 0), Point(2, 0), Point(3, 0)],
-            self.playfield)
-
-    def createJPiece(self):
-        return Piece(
-            self.playfield.pieceStartingPositionWithDimensions(Point(3, 2)),
-            [Point(0, 1), Point(0, 0), Point(1, 0), Point(2, 0)],
-            self.playfield)
-
-    def createLPiece(self):
-        return Piece(
-            self.playfield.pieceStartingPositionWithDimensions(Point(3, 2)),
-            [Point(2, 1), Point(0, 0), Point(1, 0), Point(2, 0)],
-            self.playfield)
-
-    def createOPiece(self):
-        return Piece(
-            self.playfield.pieceStartingPositionWithDimensions(Point(2, 2)),
-            [Point(0, 0), Point(0, 1), Point(1, 0), Point(1, 1)],
-            self.playfield)
-
-    def createSPiece(self):
-        return Piece(
-            self.playfield.pieceStartingPositionWithDimensions(Point(3, 2)),
-            [Point(0, 0), Point(1, 0), Point(1, 1), Point(2, 1)],
-            self.playfield)
-
-    def createZPiece(self):
-        return Piece(
-            self.playfield.pieceStartingPositionWithDimensions(Point(3, 2)),
-            [Point(0, 1), Point(1, 1), Point(1, 0), Point(2, 0)],
-            self.playfield)
-
-    def createTPiece(self):
-        return Piece(
-            self.playfield.pieceStartingPositionWithDimensions(Point(3, 2)),
-            [Point(0, 0), Point(1, 1), Point(1, 0), Point(2, 0)],
-            self.playfield)
-
-    def nextPiece(self):
-        nextInteger = self.randomizer.nextInteger() - 1
-        pieces = [
-            self.createIPiece(),
-            self.createJPiece(),
-            self.createLPiece(),
-            self.createOPiece(),
-            self.createSPiece(),
-            self.createZPiece(),
-            self.createTPiece()
-        ]
-        return pieces[nextInteger]
