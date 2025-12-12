@@ -1,3 +1,4 @@
+from model.piece_generator import PieceGenerator
 from model.tetris_game import TetrisGame
 from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator
 from model.rand import RandStub
@@ -347,6 +348,52 @@ class TestBasicRules:
             "..........",
             "..........",
             "..........",
+        ]
+
+    def test22_NextPieceIsKnownBeforeLandingTheCurrentOne(self):
+        random = RandStub([4, 1])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        assert game.getNextPiece().activeCharacter() == "I"
+
+    def test23_EntireBagIsKnown(self):
+        random = RandStub([4, 2, 1, 5, 7, 6, 3])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        bag = game.getCurrentBag()
+
+        assert bag.isActiveCharacterAt(4, "T")
+
+    def test24_NextPieceIsKnownBeforeLandingTheLastOneInTheBag(self):
+        random = RandStub([1, 1, 1, 1, 1, 1, 1, 2])
+        game = TetrisGame(10, 20, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hardDrop()
+        game.hardDrop()
+        game.hardDrop()
+        game.hardDrop()
+        game.hardDrop()
+        game.hardDrop()
+
+        assert game.getNextPiece().activeCharacter() == "J"
+
+    def test25_NextBagIsKnownSinceTheCurrentOneIsConsumed(self):
+        random = RandStub([1, 1, 1, 1, 1, 1, 1, 2])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        bag = game.getNextBag()
+
+        assert bag.isActiveCharacterAt(0, "J")
+
+    def test26_PieceCanPrintItSelf(self):
+        random = RandStub([1,7])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        assert game.getNextPiece().asStringList() == [
+            "....",
+            "....",
+            "TTT.",
+            ".T..",
         ]
 
 

@@ -1,27 +1,17 @@
 import pygame
 from desktop.desktop_component import DesktopComponent
 from desktop.area import Area
-from model.tetris_game import TetrisGame
-from model.rotation_list_generator import SegaRotationListGenerator
-from model.kicks import ARSKicks
-from model.rand import Rand
 
 
 class TetrisGameComponent(DesktopComponent):
-    def __init__(self, anApplicationContext):
+    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize):
         super().__init__(anApplicationContext)
-        self.rows = 20
-        self.cols = 10
+        self.rows = anAmmountOfRows
+        self.cols = anAmmountOfCols
+        self.game = aGame
+        self.cellSize = cellSize
         self.borderWidth = 2
-        self.game = TetrisGame(
-            self.cols,
-            self.rows,
-            Rand(),
-            SegaRotationListGenerator,
-            ARSKicks
-        )
         self.timeSinceLastTick = 0
-        self.cellSize = 30
         self.inputObserver = self.applicationContext.inputObserver
         self.inputObserver.addKeyupObserver(pygame.K_LEFT, self.game.moveLeft)
         self.inputObserver.addKeyupObserver(pygame.K_RIGHT, self.game.moveRight)
@@ -60,17 +50,27 @@ class TetrisGameComponent(DesktopComponent):
                     pygame.Rect(anArea.x + self.cellSize * x, anArea.y + self.cellSize * y, self.cellSize, self.cellSize)
                 )
 
-    def draw(self, anArea):
-        boardArea = Area(0, 0, self.cellSize * self.cols, self.cellSize * (self.rows + 2))
-        centeredBoardArea = boardArea.centeredAt(anArea)
-        self.drawBoard(centeredBoardArea)
-        centeredBoardAreaWithoutVanishZone = Area(
+    def area(self):
+        return Area(0, 0, self.cellSize * self.cols, self.cellSize * (self.rows + 2))
+
+    def centeredArea(self, anotherArea):
+        return self.area().centeredAt(anotherArea)
+    
+    def areaWithoutVanishZone(self, anotherArea):
+        centeredBoardArea = self.centeredArea(anotherArea)
+        return Area(
             centeredBoardArea.x,
             centeredBoardArea.y + self.cellSize * 2,
             centeredBoardArea.width,
             centeredBoardArea.height - self.cellSize * 2
         )
-        self.drawBorderAround(centeredBoardAreaWithoutVanishZone)
+
+    def draw(self, anArea):
+        self.drawBoard(self.centeredArea(anArea))
+        self.drawBorderAround(self.areaWithoutVanishZone(anArea))
+
+    def nextPiece(self):
+        return self.game.getNextPiece()
 
     def update(self, millisecondsSinceLastUpdate):
         self.timeSinceLastTick += millisecondsSinceLastUpdate

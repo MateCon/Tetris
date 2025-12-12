@@ -65,8 +65,7 @@ class PieceGenerator:
             self.kickAlgorithm,
             "T")
 
-    def nextPiece(self):
-        nextInteger = self.randomizer.nextInteger(1, 7) - 1
+    def nextPiece(self, nextInteger):
         pieces = [
             self.createIPiece,
             self.createJPiece,
@@ -76,4 +75,4 @@ class PieceGenerator:
             self.createZPiece,
             self.createTPiece
         ]
-        return pieces[nextInteger]()
+        return pieces[nextInteger - 1]()

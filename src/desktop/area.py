@@ -26,3 +26,11 @@ class Area:
             self.width,
             self.height
         )
+
+    def shifted(self, xOffset, yOffset):
+        return Area(
+            self.x + xOffset,
+            self.y + yOffset,
+            self.width,
+            self.height
+        )
