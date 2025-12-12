@@ -1,7 +1,7 @@
-from tetris_game import TetrisGame
-from rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator
-from rand import RandStub
-from kicks import NoKicks, ARSKicks
+from model.tetris_game import TetrisGame
+from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator
+from model.rand import RandStub
+from model.kicks import NoKicks, ARSKicks
 
 
 class TestBasicRules:
@@ -127,8 +127,8 @@ class TestBasicRules:
         game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
 
         assert game.asStringList() == [
-            "----T-----",
             "---TTT----",
+            "----T-----",
             "..........",
             "..........",
             "..........",

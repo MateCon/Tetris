@@ -1,6 +1,6 @@
-from rotation_list import RotationList
-from piece_shape import PieceShape
-from point import Point
+from model.rotation_list import RotationList
+from model.piece_shape import PieceShape
+from model.point import Point
 
 
 class NintendoRotationListGenerator:
@@ -45,7 +45,7 @@ class NintendoRotationListGenerator:
 
     def createTRotationList(self):
         return RotationList([
-            PieceShape([Point(0, 0), Point(1, 1), Point(1, 0), Point(2, 0)]),
+            PieceShape([Point(0, 1), Point(1, 1), Point(2, 1), Point(1, 0)]),
             PieceShape([Point(0, 1), Point(1, 0), Point(1, 1), Point(1, 2)]),
             PieceShape([Point(0, 1), Point(1, 1), Point(2, 1), Point(1, 2)]),
             PieceShape([Point(1, 0), Point(1, 1), Point(2, 1), Point(1, 2)]),

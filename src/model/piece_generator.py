@@ -1,5 +1,5 @@
-from piece import Piece
-from point import Point
+from model.piece import Piece
+from model.point import Point
 
 
 class PieceGenerator:
@@ -66,7 +66,7 @@ class PieceGenerator:
             "T")
 
     def nextPiece(self):
-        nextInteger = self.randomizer.nextInteger() - 1
+        nextInteger = self.randomizer.nextInteger(1, 7) - 1
         pieces = [
             self.createIPiece,
             self.createJPiece,

@@ -1,5 +1,5 @@
-from cell import Cell
-from point import Point
+from model.cell import Cell
+from model.point import Point
 
 
 class Playfield:

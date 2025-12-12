@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from point import Point
+from model.point import Point
 
 
 class WallKickSystem(ABC):

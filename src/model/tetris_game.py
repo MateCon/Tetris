@@ -1,6 +1,6 @@
-from piece_generator import PieceGenerator
-from playfield import Playfield
-from point import Point
+from model.piece_generator import PieceGenerator
+from model.playfield import Playfield
+from model.point import Point
 
 
 class TetrisGame:
