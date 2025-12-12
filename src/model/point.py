@@ -6,5 +6,8 @@ class Point:
     def __add__(self, anotherPoint):
         return Point(self.x + anotherPoint.x, self.y + anotherPoint.y)
 
+    def __mul__(self, aFactor):
+        return Point(self.x * aFactor, self.y * aFactor)
+
     def __eq__(self, anotherPoint):
         return self.x == anotherPoint.x and self.y == anotherPoint.y

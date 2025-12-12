@@ -4,13 +4,13 @@ class InputObserver:
         self.keydownHandlers = dict()
 
     def keydown(self, aKey):
-        if aKey in self.keyupHandlers:
-            for handler in self.keyupHandlers[aKey]:
+        if aKey in self.keydownHandlers:
+            for handler in self.keydownHandlers[aKey]:
                 handler()
 
     def keyup(self, aKey):
-        if aKey in self.keydownHandlers:
-            for handler in self.keydownHandlers[aKey]:
+        if aKey in self.keyupHandlers:
+            for handler in self.keyupHandlers[aKey]:
                 handler()
 
     def addKeyupObserver(self, aKey, aHandler):
@@ -21,6 +21,6 @@ class InputObserver:
 
     def addKeydownObserver(self, aKey, aHandler):
         if aKey in self.keyupHandlers:
-            self.keyupHandlers[aKey].append(aHandler)
+            self.keydownHandlers[aKey].append(aHandler)
         else:
-            self.keyupHandlers[aKey] = [aHandler]
+            self.keydownHandlers[aKey] = [aHandler]

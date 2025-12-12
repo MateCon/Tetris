@@ -3,10 +3,11 @@ from model.point import Point
 
 
 class Playfield:
-    def __init__(self, aWidth, aHeight):
+    def __init__(self, aWidth, aHeight, anEventNotifier):
         self.width = aWidth
         self.height = aHeight
         self.blocks = []
+        self.eventNotifier = anEventNotifier
 
         for _ in range(self.height + 2):
             currentRow = []
@@ -49,6 +50,11 @@ class Playfield:
         for row in self.blocks:
             if isComplete(row):
                 completedRows.append(row)
+
+        if len(completedRows) == 1:
+            self.eventNotifier.notifyRowClear()
+        if len(completedRows) == 2:
+            self.eventNotifier.notifyDoubleRowClear()
 
         return completedRows
 

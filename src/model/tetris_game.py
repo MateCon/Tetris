@@ -2,11 +2,20 @@ from model.piece_generator import PieceGenerator
 from model.playfield import Playfield
 from model.point import Point
 from model.piece_bag import PieceBag
+from model.tetris_event_notifier import TetrisEventNotifier
 
 
 class TetrisGame:
-    def __init__(self, aWidth, aHeight, aRandomizer, aRotationListGeneratorClass, aKickAlgorithmClass):
-        self.playfield = Playfield(aWidth, aHeight)
+    def __init__(
+            self,
+            aWidth,
+            aHeight,
+            aRandomizer,
+            aRotationListGeneratorClass,
+            aKickAlgorithmClass,
+            anEventNotifier=TetrisEventNotifier()
+    ):
+        self.playfield = Playfield(aWidth, aHeight, anEventNotifier)
         self.randomizer = aRandomizer
         self.kickAlgoritm = aKickAlgorithmClass(self.playfield)
         self.pieceGenerator = PieceGenerator(
@@ -19,6 +28,7 @@ class TetrisGame:
         self.nextBag = PieceBag(self.randomizer, self.pieceGenerator)
         self.currentPiece = self.currentBag.next()
         self.nextPiece = self.currentBag.next()
+        self.eventNotifier = anEventNotifier
 
     def goToNextBag(self):
         self.currentBag = self.nextBag
@@ -78,3 +88,7 @@ class TetrisGame:
 
     def getNextBag(self):
         return self.nextBag
+
+    def getNextSix(self):
+        allRemaining = [self.nextPiece] + self.currentBag.allRemaining() + self.nextBag.allRemaining()
+        return allRemaining[0:6]

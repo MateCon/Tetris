@@ -61,7 +61,10 @@ class Piece:
         self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheLeft(), rotateLeftWithOffset)
 
     def asStringList(self):
-        charMatrix = [['.' for _ in range(4)] for _ in range(4)]
+        if self.activeCharacter() == "I":
+            return ["....", "IIII", "...."]
+
+        charMatrix = [['.' for _ in range(4)] for _ in range(3)]
 
         def callback(point):
             charMatrix[len(charMatrix) - point.y - 1][point.x] = self.activeCharacter()

@@ -10,13 +10,19 @@ import pygame
 class DesktopApplicationRunner:
     def __init__(self):
         pygame.init()
+        pygame.font.init()
         self.clock = pygame.time.Clock()
         self.applicationContext = ApplicationContext(
             pygame.display.set_mode((1280,720)),
-            InputObserver()
+            InputObserver(),
+            self.createFont()
         )
         self.page = PlayPageComponent(self.applicationContext)
         self.timeSinceLastFrame = 0
+
+    def createFont(self):
+        font_file = pygame.font.get_default_font()
+        return pygame.font.Font(font_file, 24)
 
     def eventHandler(self):
         for event in pygame.event.get():

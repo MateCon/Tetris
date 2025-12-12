@@ -11,6 +11,9 @@ class Area:
     def asRect(self):
         return pygame.Rect(self.x, self.y, self.width, self.height)
 
+    def copy(self):
+        return Area(self.x, self.y, self.width, self.height)
+
     def withPadding(self, paddingX, paddingY):
         return Area(
             self.x + paddingX,
