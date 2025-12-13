@@ -1,10 +1,12 @@
 import pygame
 from desktop.desktop_component import DesktopComponent
 from desktop.area import Area
+from desktop.held_command_repeater import HeldCommandRepeater
+from model.point import Point
 
 
 class TetrisGameComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize):
+    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier):
         super().__init__(anApplicationContext)
         self.rows = anAmmountOfRows
         self.cols = anAmmountOfCols
@@ -13,57 +15,42 @@ class TetrisGameComponent(DesktopComponent):
         self.borderWidth = 2
         self.timeSinceLastTick = 0
         self.inputObserver = self.applicationContext.inputObserver
-        self.inputObserver.addKeydownObserver(pygame.K_LEFT, self.startMovingLeft)
-        self.inputObserver.addKeyupObserver(pygame.K_LEFT, self.stopMovingLeft)
+        self.tetrisEventNotifier = aTetrisEventNotifier
 
-        self.inputObserver.addKeydownObserver(pygame.K_RIGHT, self.startMovingRight)
-        self.inputObserver.addKeyupObserver(pygame.K_RIGHT, self.stopMovingRight)
+        self.leftCommandRepeater = HeldCommandRepeater(self.game.moveLeft, 167, 33)
+        self.inputObserver.addKeydownObserver(self, pygame.K_LEFT, self.leftCommandRepeater.start)
+        self.inputObserver.addKeyupObserver(self, pygame.K_LEFT, self.leftCommandRepeater.stop)
 
-        self.inputObserver.addKeydownObserver(pygame.K_s, self.startDropping)
-        self.inputObserver.addKeyupObserver(pygame.K_s, self.stopDropping)
+        self.rightCommandRepeater = HeldCommandRepeater(self.game.moveRight, 167, 33)
+        self.inputObserver.addKeydownObserver(self, pygame.K_RIGHT, self.rightCommandRepeater.start)
+        self.inputObserver.addKeyupObserver(self, pygame.K_RIGHT, self.rightCommandRepeater.stop)
 
-        self.inputObserver.addKeydownObserver(pygame.K_w, self.game.hardDrop)
-        self.inputObserver.addKeydownObserver(pygame.K_a, self.game.rotateLeft)
-        self.inputObserver.addKeydownObserver(pygame.K_d, self.game.rotateRight)
+        self.dropCommandRepeater = HeldCommandRepeater(self.game.softDrop, 50, 33)
+        self.inputObserver.addKeydownObserver(self, pygame.K_s, self.dropCommandRepeater.start)
+        self.inputObserver.addKeyupObserver(self, pygame.K_s, self.dropCommandRepeater.stop)
+        self.tetrisEventNotifier.attachPlacedPieceEvent(self.dropCommandRepeater.stop)
 
-        self.isMovingRight = False
-        self.timeSinceLastRightMove = 0
-        self.amountOfConsecutiveRightMovements = 0
+        self.inputObserver.addKeydownObserver(self, pygame.K_w, self.game.hardDrop)
+        self.inputObserver.addKeydownObserver(self, pygame.K_a, self.game.rotateLeft)
+        self.inputObserver.addKeydownObserver(self, pygame.K_d, self.game.rotateRight)
 
-        self.isMovingLeft = False
-        self.timeSinceLastLeftMove = 0
-        self.amountOfConsecutiveLeftMovements = 0
+        self.linesCleared = 0
+        self.tetrisEventNotifier.attachRowClearEvent(self.onRowClear)
+        self.tetrisEventNotifier.attachDoubleRowClearEvent(self.onDoubleRowClear)
+        self.tetrisEventNotifier.attachTripleRowClearEvent(self.onTripleRowClear)
+        self.tetrisEventNotifier.attachQuadrupleRowClearEvent(self.onQuadrupleRowClear)
 
-        self.isDropping = False
-        self.timeSinceLastDropMove = 0
-        self.amountOfConsecutiveDropMovements = 0
+    def onRowClear(self):
+        self.linesCleared += 1
 
-    def startMovingRight(self):
-        self.game.moveRight()
-        self.isMovingRight = True
-        self.timeSinceLastRightMove = 0
-        self.amountOfConsecutiveRightMovements = 0
+    def onDoubleRowClear(self):
+        self.linesCleared += 2
 
-    def stopMovingRight(self):
-        self.isMovingRight = False
+    def onTripleRowClear(self):
+        self.linesCleared += 3
 
-    def startMovingLeft(self):
-        self.game.moveLeft()
-        self.isMovingLeft = True
-        self.timeSinceLastLeftMove = 0
-        self.amountOfConsecutiveLeftMovements = 0
-
-    def stopMovingLeft(self):
-        self.isMovingLeft = False
-
-    def startDropping(self):
-        self.game.softDrop()
-        self.isDropping = True
-        self.timeSinceLastDropMove = 0
-        self.amountOfConsecutiveDropMovements = 0
-
-    def stopDropping(self):
-        self.isMovingLeft = False
+    def onQuadrupleRowClear(self):
+        self.linesCleared += 4
 
     def drawRect(self, aColor, aRectangle):
         self.applicationContext.drawRect(aColor, pygame.Rect(
@@ -111,32 +98,41 @@ class TetrisGameComponent(DesktopComponent):
         )
 
     def draw(self, anArea):
+        self.applicationContext.drawBigText(
+            f"Level {1 + self.linesCleared // 10}",
+            (255, 255, 255),
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 8, 0).asRect()
+        )
+        self.applicationContext.drawBigText(
+            f"Lines cleared: {self.linesCleared}",
+            (255, 255, 255),
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 8, 40).asRect()
+        )
         self.drawBoard(self.centeredArea(anArea))
         self.drawBorderAround(self.areaWithoutVanishZone(anArea))
 
     def nextSixPieces(self):
         return self.game.getNextSix()
 
+    def timeToSoftDrop(self):
+        gavityTable = [ 0.01667, 0.021017, 0.026977, 0.035256, 0.04693,
+                        0.06361, 0.0879, 0.1236, 0.1775, 0.2598,
+                        0.388, 0.59, 0.92, 1.46, 2.36,
+                        3.91 , 6.61, 11.43, 20.3 ]
+        level = 1 + self.linesCleared // 10
+        gravity = gavityTable[min(level, len(gavityTable) - 1)]
+        return 1000/(60*gravity)
+
     def update(self, millisecondsSinceLastUpdate):
         self.timeSinceLastTick += millisecondsSinceLastUpdate
-        if self.timeSinceLastTick > 250:
+        timeToSoftDrop = self.timeToSoftDrop()
+        if self.timeSinceLastTick > timeToSoftDrop:
             self.game.softDrop()
-            self.timeSinceLastTick = 0
+            self.timeSinceLastTick -= timeToSoftDrop
 
-        self.timeSinceLastRightMove += millisecondsSinceLastUpdate
-        if self.isMovingRight and self.timeSinceLastRightMove > 100 - self.amountOfConsecutiveRightMovements * 15:
-            self.game.moveRight()
-            self.timeSinceLastRightMove = 0
-            self.amountOfConsecutiveRightMovements += 1
+        self.rightCommandRepeater.update(millisecondsSinceLastUpdate)
+        self.leftCommandRepeater.update(millisecondsSinceLastUpdate)
+        self.dropCommandRepeater.update(millisecondsSinceLastUpdate)
 
-        self.timeSinceLastLeftMove += millisecondsSinceLastUpdate
-        if self.isMovingLeft and self.timeSinceLastLeftMove > 100 - self.amountOfConsecutiveLeftMovements * 15:
-            self.game.moveLeft()
-            self.timeSinceLastLeftMove = 0
-            self.amountOfConsecutiveLeftMovements += 1
-
-        self.timeSinceLastDropMove += millisecondsSinceLastUpdate
-        if self.isDropping and self.timeSinceLastDropMove > 100 - self.amountOfConsecutiveDropMovements * 15:
-            self.game.softDrop()
-            self.timeSinceLastDropMove = 0
-            self.amountOfConsecutiveDropMovements += 1
+    def destroy(self):
+        self.inputObserver.removeFrom(self)

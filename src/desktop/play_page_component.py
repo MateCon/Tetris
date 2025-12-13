@@ -1,8 +1,9 @@
 from desktop.desktop_component import DesktopComponent
 from desktop.tetris_game_component import TetrisGameComponent
 from desktop.area import Area
+from model.tetris_event_notifier import TetrisEventNotifier
 from model.tetris_game import TetrisGame
-from model.rotation_list_generator import SegaRotationListGenerator
+from model.rotation_list_generator import NintendoRotationListGenerator
 from model.kicks import ARSKicks
 from model.rand import Rand
 from model.point import Point
@@ -61,18 +62,27 @@ class NextPieceDisplayComponent(DesktopComponent):
 class PlayPageComponent(DesktopComponent):
     def __init__(self, anApplicationContext):
         super().__init__(anApplicationContext)
+        self.gameComponent = None
+        self.initializeGame()
+        anApplicationContext.inputObserver.addKeydownObserver(self, pygame.K_DELETE, self.initializeGame)
+
+    def initializeGame(self):
         self.rows = 20
         self.cols = 10
         self.cellSize = 30
+        self.tetrisEventNotifier = TetrisEventNotifier()
         self.game = TetrisGame(
             self.cols,
             self.rows,
             Rand(),
-            SegaRotationListGenerator,
-            ARSKicks
+            NintendoRotationListGenerator,
+            ARSKicks,
+            self.tetrisEventNotifier
         )
-        self.gameComponent = TetrisGameComponent(anApplicationContext, self.game, self.rows, self.cols, self.cellSize)
-        self.nextPieceDisplayComponent = NextPieceDisplayComponent(anApplicationContext, self.gameComponent.nextSixPieces(), self.cellSize)
+        if self.gameComponent:
+            self.gameComponent.destroy()
+        self.gameComponent = TetrisGameComponent(self.applicationContext, self.game, self.rows, self.cols, self.cellSize, self.tetrisEventNotifier)
+        self.nextPieceDisplayComponent = NextPieceDisplayComponent(self.applicationContext, self.gameComponent.nextSixPieces(), self.cellSize)
 
     def draw(self, anArea):
         self.applicationContext.drawRect(pygame.Color(0,0,0), anArea.asRect())

@@ -3,24 +3,37 @@ class InputObserver:
         self.keyupHandlers = dict()
         self.keydownHandlers = dict()
 
-    def keydown(self, aKey):
-        if aKey in self.keydownHandlers:
-            for handler in self.keydownHandlers[aKey]:
+    def notify(self, aKey, aHandlerDict):
+        if aKey in aHandlerDict:
+            for _, handler in aHandlerDict[aKey]:
                 handler()
+
+    def addObserver(self, aSenderObject, aKey, aHandler, aHandlerDict):
+        if aKey in aHandlerDict:
+            aHandlerDict[aKey].append((aSenderObject, aHandler))
+        else:
+            aHandlerDict[aKey] = [(aSenderObject, aHandler)]
 
     def keyup(self, aKey):
-        if aKey in self.keyupHandlers:
-            for handler in self.keyupHandlers[aKey]:
-                handler()
+        self.notify(aKey, self.keyupHandlers)
 
-    def addKeyupObserver(self, aKey, aHandler):
-        if aKey in self.keyupHandlers:
-            self.keyupHandlers[aKey].append(aHandler)
-        else:
-            self.keyupHandlers[aKey] = [aHandler]
+    def addKeyupObserver(self, aSenderObject, aKey, aHandler):
+        self.addObserver(aSenderObject, aKey, aHandler, self.keyupHandlers)
 
-    def addKeydownObserver(self, aKey, aHandler):
-        if aKey in self.keyupHandlers:
-            self.keydownHandlers[aKey].append(aHandler)
-        else:
-            self.keydownHandlers[aKey] = [aHandler]
+    def keydown(self, aKey):
+        self.notify(aKey, self.keydownHandlers)
+
+    def addKeydownObserver(self, aSenderObject, aKey, aHandler):
+        self.addObserver(aSenderObject, aKey, aHandler, self.keydownHandlers)
+
+    def removeFromIn(self, aSenderObject, aHandlerDict):
+        for key, handlerList in aHandlerDict.items():
+            newHandlerList = []
+            for (anotherSenderObject, aHandler) in handlerList:
+                if anotherSenderObject is not aSenderObject:
+                    newHandlerList.append((anotherSenderObject, aHandler))
+            aHandlerDict[key] = newHandlerList
+
+    def removeFrom(self, aSenderObject):
+        self.removeFromIn(aSenderObject, self.keyupHandlers)
+        self.removeFromIn(aSenderObject, self.keydownHandlers)

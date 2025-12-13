@@ -176,3 +176,70 @@ class TestGameEvents:
         game.hardDrop()
 
         assert self.rowCleared
+
+    def test08_TripleRowClearedEventIsTriggered(self):
+        random = RandStub([3, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 6, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.rowCleared = False
+
+        def event():
+            self.rowCleared = True
+
+        eventNotifier.attachTripleRowClearEvent(event)
+
+        game.rotateLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        for i in range(9):
+            game.rotateRight()
+            for _ in range(6):
+                game.moveLeft()
+            for _ in range(0, i + 1):
+                game.moveRight()
+            game.hardDrop()
+
+        assert self.rowCleared
+
+    def test09_QuadrupleRowClearedEventIsTriggered(self):
+        random = RandStub([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 6, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.rowCleared = False
+
+        def event():
+            self.rowCleared = True
+
+        eventNotifier.attachQuadrupleRowClearEvent(event)
+
+        for i in range(10):
+            game.rotateRight()
+            for _ in range(6):
+                game.moveLeft()
+            for _ in range(0, i):
+                game.moveRight()
+            game.hardDrop()
+
+        assert self.rowCleared
+
+    def test10_PlacedPieceEventIsTriggered(self):
+        random = RandStub([1, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 6, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.placedPiece = False
+
+        def event():
+            self.placedPiece = True
+
+        eventNotifier.attachPlacedPieceEvent(event)
+
+        game.hardDrop()
+
+        assert self.placedPiece

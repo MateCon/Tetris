@@ -44,6 +44,7 @@ class TetrisGame:
         self.playfield.addBlocks(self.currentPiece)
         self.goToNextPiece()
         self.checkForClearedLines()
+        self.eventNotifier.notifyPlacedPiece()
 
     def tick(self):
         self.softDrop()

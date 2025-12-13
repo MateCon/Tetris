@@ -55,6 +55,10 @@ class Playfield:
             self.eventNotifier.notifyRowClear()
         if len(completedRows) == 2:
             self.eventNotifier.notifyDoubleRowClear()
+        if len(completedRows) == 3:
+            self.eventNotifier.notifyTripleRowClear()
+        if len(completedRows) == 4:
+            self.eventNotifier.notifyQuadrupleRowClear()
 
         return completedRows
 
