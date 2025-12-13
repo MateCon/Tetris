@@ -135,8 +135,8 @@ class TetrisGameComponent(DesktopComponent):
     def destroy(self):
         self.inputObserver.removeFrom(self)
 
-    def mapKeydown(self, aKey, anAction):
-        self.inputObserver.addKeydownObserver(self, aKey, anAction)
+    def mapKeydown(self, aDeviceId, aKey, anAction):
+        self.inputObserver.addKeydownObserver(self, aKey, aDeviceId, anAction)
 
-    def mapKeyup(self, aKey, anAction):
-        self.inputObserver.addKeyupObserver(self, aKey, anAction)
+    def mapKeyup(self, aDeviceId, aKey, anAction):
+        self.inputObserver.addKeyupObserver(self, aKey, aDeviceId, anAction)

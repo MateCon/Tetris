@@ -3,6 +3,7 @@ from model.playfield import Playfield
 from model.point import Point
 from model.piece_bag import PieceBag
 from model.tetris_event_notifier import TetrisEventNotifier
+from model.piece import NoPiece
 
 
 class TetrisGame:
@@ -42,8 +43,11 @@ class TetrisGame:
 
     def freezeCurrentPiece(self):
         self.playfield.addBlocks(self.currentPiece)
-        self.goToNextPiece()
-        self.checkForClearedLines()
+        if self.currentPiece.anySatisfy(lambda point: self.playfield.pointIsInVanishingZone(point)):
+            self.currentPiece = NoPiece()
+        else:
+            self.goToNextPiece()
+            self.checkForClearedLines()
         self.eventNotifier.notifyPlacedPiece()
 
     def tick(self):

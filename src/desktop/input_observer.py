@@ -3,28 +3,31 @@ class InputObserver:
         self.keyupHandlers = dict()
         self.keydownHandlers = dict()
 
-    def notify(self, aKey, aHandlerDict):
-        if aKey in aHandlerDict:
-            for _, handler in aHandlerDict[aKey]:
+    def notify(self, aKey, aDevice, aHandlerDict):
+        keyDevicePair = (aKey, aDevice)
+        if keyDevicePair in aHandlerDict:
+            for _, handler in aHandlerDict[keyDevicePair]:
                 handler()
 
-    def addObserver(self, aSenderObject, aKey, aHandler, aHandlerDict):
-        if aKey in aHandlerDict:
-            aHandlerDict[aKey].append((aSenderObject, aHandler))
+    def addObserver(self, aSenderObject, aKey, aDevice, aHandler, aHandlerDict):
+        keyDevicePair = (aKey, aDevice)
+        if keyDevicePair in aHandlerDict:
+            aHandlerDict[keyDevicePair].append((aSenderObject, aHandler))
         else:
-            aHandlerDict[aKey] = [(aSenderObject, aHandler)]
+            aHandlerDict[keyDevicePair] = [(aSenderObject, aHandler)]
 
-    def keyup(self, aKey):
-        self.notify(aKey, self.keyupHandlers)
+    def keyup(self, aKey, aDevice):
+        self.notify(aKey, aDevice, self.keyupHandlers)
 
-    def addKeyupObserver(self, aSenderObject, aKey, aHandler):
-        self.addObserver(aSenderObject, aKey, aHandler, self.keyupHandlers)
+    def addKeyupObserver(self, aSenderObject, aKey, aDevice, aHandler):
+        self.addObserver(aSenderObject, aKey, aDevice, aHandler, self.keyupHandlers)
 
-    def keydown(self, aKey):
-        self.notify(aKey, self.keydownHandlers)
+    def keydown(self, aKey, aDevice):
+        self.notify(aKey, aDevice, self.keydownHandlers)
 
-    def addKeydownObserver(self, aSenderObject, aKey, aHandler):
-        self.addObserver(aSenderObject, aKey, aHandler, self.keydownHandlers)
+    def addKeydownObserver(self, aSenderObject, aKey, aDevice, aHandler):
+        self.addObserver(aSenderObject, aKey, aDevice,
+                         aHandler, self.keydownHandlers)
 
     def removeFromIn(self, aSenderObject, aHandlerDict):
         for key, handlerList in aHandlerDict.items():

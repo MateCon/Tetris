@@ -18,6 +18,9 @@ class Playfield:
     def pieceStartingPositionWithDimensions(self, someDimensions):
         return Point((self.width - someDimensions.x) // 2, self.height)
 
+    def pointIsInVanishingZone(self, aPoint):
+        return self.pointIsInPlayfield(aPoint) and aPoint.y >= self.height and aPoint.y < self.height + 2
+
     def pointIsInDisplayableArea(self, aPoint):
         return self.pointIsInPlayfield(aPoint) and aPoint.y < self.height + 2
 

@@ -12,6 +12,9 @@ class Piece:
     def allSatisfy(self, aCallback):
         return self.rotationList.currentShape().allSatisfy(lambda squareOffset: aCallback(self.position + squareOffset))
 
+    def anySatisfy(self, aCallback):
+        return self.rotationList.currentShape().anySatisfy(lambda squareOffset: aCallback(self.position + squareOffset))
+
     def canBlockGoTo(self, aPosition):
         return self.playfield.pointIsInPlayfield(aPosition) and not self.playfield.hasBlockIn(aPosition)
 
@@ -72,3 +75,44 @@ class Piece:
         self.rotationList.currentShape().do(callback)
 
         return [''.join(row) for row in charMatrix]
+
+
+class NoPiece:
+    def do(self, aCallback):
+        pass
+
+    def allSatisfy(self, aCallback):
+        return False
+
+    def anySatisfy(self, aCallback):
+        return False
+
+    def moveIfCanMoveIfCantMove(self, anOffset, aHandlerWhenCanMove, aHandlerWhenCantMove):
+        pass
+
+    def moveIfCantMove(self, anOffset, aHandlerWhenCantMove):
+        pass
+
+    def move(self, anOffset):
+        pass
+
+    def activeCharacter(self):
+        return ''
+
+    def inactiveCharacter(self):
+        return ''
+
+    def canBlockRotate(self, blockPosition):
+        return False
+
+    def canRotate(self, newShape, anOffset):
+        return False
+
+    def rotateRight(self):
+        pass
+
+    def rotateLeft(self):
+        pass
+
+    def asStringList(self):
+        return []

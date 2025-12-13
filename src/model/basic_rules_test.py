@@ -421,4 +421,29 @@ class TestBasicRules:
         assert nextSix[4].activeCharacter() == "I"
         assert nextSix[5].activeCharacter() == "J"
 
+    def test29_WhenPlayerLosesNoNewPieceSpawns(self):
+        random = RandStub([4, 4, 4, 4, 4, 4])
+        game = TetrisGame(10, 3, random, NintendoRotationListGenerator, NoKicks)
 
+        game.hardDrop()
+        game.hardDrop()
+
+        assert game.asStringList() == [
+            "----------",
+            "----oo----",
+            "....oo....",
+            "....oo....",
+            "....oo....",
+        ]
+
+    def test30_PlayerLosesEvenWhenALineWillBeCleared(self):
+        random = RandStub([4, 4])
+        game = TetrisGame(2, 1, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hardDrop()
+
+        assert game.asStringList() == [
+            "--",
+            "oo",
+            "oo",
+        ]
