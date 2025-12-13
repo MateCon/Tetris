@@ -2,11 +2,11 @@ import pygame
 from desktop.desktop_component import DesktopComponent
 from desktop.area import Area
 from desktop.held_command_repeater import HeldCommandRepeater
-from model.point import Point
+from desktop.next_piece_display_component import NextPieceDisplayComponent
 
 
 class TetrisGameComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier):
+    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper):
         super().__init__(anApplicationContext)
         self.rows = anAmmountOfRows
         self.cols = anAmmountOfCols
@@ -16,23 +16,14 @@ class TetrisGameComponent(DesktopComponent):
         self.timeSinceLastTick = 0
         self.inputObserver = self.applicationContext.inputObserver
         self.tetrisEventNotifier = aTetrisEventNotifier
+        self.nextPieceDisplayComponent = NextPieceDisplayComponent(self.applicationContext, self.nextSixPieces(), self.cellSize)
 
         self.leftCommandRepeater = HeldCommandRepeater(self.game.moveLeft, 167, 33)
-        self.inputObserver.addKeydownObserver(self, pygame.K_LEFT, self.leftCommandRepeater.start)
-        self.inputObserver.addKeyupObserver(self, pygame.K_LEFT, self.leftCommandRepeater.stop)
-
         self.rightCommandRepeater = HeldCommandRepeater(self.game.moveRight, 167, 33)
-        self.inputObserver.addKeydownObserver(self, pygame.K_RIGHT, self.rightCommandRepeater.start)
-        self.inputObserver.addKeyupObserver(self, pygame.K_RIGHT, self.rightCommandRepeater.stop)
-
         self.dropCommandRepeater = HeldCommandRepeater(self.game.softDrop, 50, 33)
-        self.inputObserver.addKeydownObserver(self, pygame.K_s, self.dropCommandRepeater.start)
-        self.inputObserver.addKeyupObserver(self, pygame.K_s, self.dropCommandRepeater.stop)
-        self.tetrisEventNotifier.attachPlacedPieceEvent(self.dropCommandRepeater.stop)
 
-        self.inputObserver.addKeydownObserver(self, pygame.K_w, self.game.hardDrop)
-        self.inputObserver.addKeydownObserver(self, pygame.K_a, self.game.rotateLeft)
-        self.inputObserver.addKeydownObserver(self, pygame.K_d, self.game.rotateRight)
+        self.tetrisEventNotifier.attachPlacedPieceEvent(self.dropCommandRepeater.stop)
+        aKeybindMapper(self)
 
         self.linesCleared = 0
         self.tetrisEventNotifier.attachRowClearEvent(self.onRowClear)
@@ -101,15 +92,20 @@ class TetrisGameComponent(DesktopComponent):
         self.applicationContext.drawBigText(
             f"Level {1 + self.linesCleared // 10}",
             (255, 255, 255),
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 8, 0).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, 0).asRect()
         )
         self.applicationContext.drawBigText(
             f"Lines cleared: {self.linesCleared}",
             (255, 255, 255),
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 8, 40).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, 40).asRect()
         )
+
         self.drawBoard(self.centeredArea(anArea))
         self.drawBorderAround(self.areaWithoutVanishZone(anArea))
+        self.nextPieceDisplayComponent.draw(
+            self.centeredArea(anArea)
+            .shifted(self.cellSize + self.area().width, 0)
+        )
 
     def nextSixPieces(self):
         return self.game.getNextSix()
@@ -134,5 +130,13 @@ class TetrisGameComponent(DesktopComponent):
         self.leftCommandRepeater.update(millisecondsSinceLastUpdate)
         self.dropCommandRepeater.update(millisecondsSinceLastUpdate)
 
+        self.nextPieceDisplayComponent.update(millisecondsSinceLastUpdate, self.nextSixPieces())
+
     def destroy(self):
         self.inputObserver.removeFrom(self)
+
+    def mapKeydown(self, aKey, anAction):
+        self.inputObserver.addKeydownObserver(self, aKey, anAction)
+
+    def mapKeyup(self, aKey, anAction):
+        self.inputObserver.addKeyupObserver(self, aKey, anAction)

@@ -24,8 +24,8 @@ class Area:
 
     def centeredAt(self, anArea):
         return Area(
-            (anArea.width - self.width) / 2,
-            (anArea.height - self.height) / 2,
+            anArea.x + (self.x + anArea.width - self.width) / 2,
+            anArea.y + (self.y  + anArea.height - self.height) / 2,
             self.width,
             self.height
         )
