@@ -5,26 +5,17 @@ import pygame
 
 
 class NextPieceDisplayComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, theNextSixPieces, cellSize):
+    def __init__(self, anApplicationContext, aGameComponent, theNextSixPieces, cellSize, aColorScheme):
         super().__init__(anApplicationContext)
+        self.gameComponent = aGameComponent
         self.nextSixPieces = theNextSixPieces
         self.cellSize = cellSize
         self.borderColor = (255, 255, 255)
         self.borderWidth = 2
+        self.colorScheme = aColorScheme
 
     def cellColor(self, aCell):
-        colors = {
-            'i': (255, 0, 0),
-            'j': (0, 0, 255),
-            'l': (255, 172, 0),
-            'o': (255, 255, 0),
-            's': (0, 255, 255),
-            't': (255, 0, 255),
-            'z': (0, 255, 0),
-        }
-        if aCell in colors.keys():
-            return colors[aCell]
-        return (0, 0, 0)
+        return self.colorScheme.cellColor(aCell, self.gameComponent.isPaused())
 
     def draw(self, anArea):
         padding = Point(self.cellSize, self.cellSize)

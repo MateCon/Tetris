@@ -421,7 +421,7 @@ class TestBasicRules:
         assert nextSix[4].activeCharacter() == "I"
         assert nextSix[5].activeCharacter() == "J"
 
-    def test29_WhenPlayerLosesNoNewPieceSpawns(self):
+    def test29_WhenPlayerLosesByPlacingABlockInTheVanishingZoneNoNewPieceSpawns(self):
         random = RandStub([4, 4, 4, 4, 4, 4])
         game = TetrisGame(10, 3, random, NintendoRotationListGenerator, NoKicks)
 
@@ -436,7 +436,23 @@ class TestBasicRules:
             "....oo....",
         ]
 
-    def test30_PlayerLosesEvenWhenALineWillBeCleared(self):
+    def test30_PlayerDoesntLoseByPlacingAPieceUpToTheVanishingZone(self):
+        random = RandStub([4, 4, 4, 4, 4, 4])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hardDrop()
+        game.hardDrop()
+
+        assert game.asStringList() == [
+            "----OO----",
+            "----OO----",
+            "....oo....",
+            "....oo....",
+            "....oo....",
+            "....oo....",
+        ]
+
+    def test31_PlayerLosesEvenWhenALineWillBeCleared(self):
         random = RandStub([4, 4])
         game = TetrisGame(2, 1, random, NintendoRotationListGenerator, NoKicks)
 

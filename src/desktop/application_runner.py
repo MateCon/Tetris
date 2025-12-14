@@ -99,8 +99,7 @@ class DesktopApplicationRunner:
         self.joystickAxisHandlers[aJoystickId] = JoystickAxisHandler(aJoystickId, self.applicationContext)
 
     def createFont(self):
-        font_file = pygame.font.get_default_font()
-        return pygame.font.Font(font_file, 20)
+        return pygame.font.Font("../assets/fonts/charybdis.regular.ttf", 22)
 
     def eventHandler(self):
         for event in pygame.event.get():

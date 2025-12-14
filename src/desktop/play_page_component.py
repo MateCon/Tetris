@@ -8,6 +8,27 @@ from model.rand import Rand
 import pygame
 
 
+class ColorScheme:
+    def __init__(self):
+        self.colors = {
+            'i': pygame.Color(255, 0, 0),
+            'j': pygame.Color(0, 0, 255),
+            'l': pygame.Color(255, 172, 0),
+            'o': pygame.Color(255, 255, 0),
+            's': pygame.Color(0, 255, 255),
+            't': pygame.Color(255, 0, 255),
+            'z': pygame.Color(0, 255, 0),
+        }
+
+    def cellColor(self, aCell, isPaused):
+        if aCell in self.colors.keys():
+            color = self.colors[aCell]
+            if isPaused:
+                return color.grayscale()
+            return color
+        return pygame.Color(0, 0, 0)
+
+
 class PlayPageComponent(DesktopComponent):
     def __init__(self, anApplicationContext):
         super().__init__(anApplicationContext)
@@ -45,6 +66,7 @@ class PlayPageComponent(DesktopComponent):
             ARSKicks,
             tetrisEventNotifier
         )
+
         gameComponent = TetrisGameComponent(
             self.applicationContext,
             game,
@@ -52,32 +74,36 @@ class PlayPageComponent(DesktopComponent):
             self.cols,
             self.cellSize,
             tetrisEventNotifier,
-            aKeybindMapper
+            aKeybindMapper,
+            ColorScheme()
         )
         self.gameComponents.append(gameComponent)
 
     def mapKeyboard(self, aGameComponent):
-        aGameComponent.mapKeydown(0, pygame.K_LEFT, aGameComponent.leftCommandRepeater.start)
-        aGameComponent.mapKeyup(0, pygame.K_LEFT, aGameComponent.leftCommandRepeater.stop)
-        aGameComponent.mapKeydown(0, pygame.K_RIGHT, aGameComponent.rightCommandRepeater.start)
-        aGameComponent.mapKeyup(0, pygame.K_RIGHT, aGameComponent.rightCommandRepeater.stop)
-        aGameComponent.mapKeydown(0, pygame.K_s, aGameComponent.dropCommandRepeater.start)
-        aGameComponent.mapKeyup(0, pygame.K_s, aGameComponent.dropCommandRepeater.stop)
-        aGameComponent.mapKeydown(0, pygame.K_w, aGameComponent.game.hardDrop)
-        aGameComponent.mapKeydown(0, pygame.K_a, aGameComponent.game.rotateLeft)
-        aGameComponent.mapKeydown(0, pygame.K_d, aGameComponent.game.rotateRight)
+        aGameComponent.mapKeydown(0, pygame.K_LEFT, aGameComponent.startMovingLeft)
+        aGameComponent.mapKeyup(0, pygame.K_LEFT, aGameComponent.stopMovingLeft)
+        aGameComponent.mapKeydown(0, pygame.K_RIGHT, aGameComponent.startMovingRight)
+        aGameComponent.mapKeyup(0, pygame.K_RIGHT, aGameComponent.stopMovingRight)
+        aGameComponent.mapKeydown(0, pygame.K_s, aGameComponent.startDropping)
+        aGameComponent.mapKeyup(0, pygame.K_s, aGameComponent.stopDropping)
+        aGameComponent.mapKeydown(0, pygame.K_w, aGameComponent.hardDrop)
+        aGameComponent.mapKeydown(0, pygame.K_a, aGameComponent.rotateLeft)
+        aGameComponent.mapKeydown(0, pygame.K_d, aGameComponent.rotateRight)
+        aGameComponent.mapKeydown(0, pygame.K_DOWN, aGameComponent.rotateLeft)
+        aGameComponent.mapKeydown(0, pygame.K_UP, aGameComponent.rotateRight)
+        aGameComponent.mapKeydown(0, pygame.K_ESCAPE, aGameComponent.togglePause)
 
     def createJoystickMapper(self, aDeviceId):
         def mapJoystick(aGameComponent):
-            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_LEFT", aGameComponent.leftCommandRepeater.start)
-            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_LEFT", aGameComponent.leftCommandRepeater.stop)
-            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_RIGHT", aGameComponent.rightCommandRepeater.start)
-            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_RIGHT", aGameComponent.rightCommandRepeater.stop)
-            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.dropCommandRepeater.start)
-            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.dropCommandRepeater.stop)
-            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_UP", aGameComponent.game.hardDrop)
-            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_STICK_LEFT", aGameComponent.game.rotateLeft)
-            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_STICK_RIGHT", aGameComponent.game.rotateRight)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_LEFT", aGameComponent.startMovingLeft)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_LEFT", aGameComponent.stopMovingLeft)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_RIGHT", aGameComponent.startMovingRight)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_RIGHT", aGameComponent.stopMovingRight)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.startDropping)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.stopDropping)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_UP", aGameComponent.hardDrop)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_STICK_LEFT", aGameComponent.rotateLeft)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_STICK_RIGHT", aGameComponent.rotateRight)
 
         return mapJoystick
 
@@ -108,6 +134,22 @@ class PlayPageComponent(DesktopComponent):
             self.gameComponents[0].draw(leftArea)
             self.gameComponents[1].draw(middleArea)
             self.gameComponents[2].draw(rightArea)
+        if len(self.gameComponents) == 4:
+            topLeftArea = anArea.copy()
+            topLeftArea.width /= 2
+            topLeftArea.height /= 2
+            topRightArea = topLeftArea.copy()
+            topRightArea.x = topRightArea.width
+            bottomLeftArea = topLeftArea.copy()
+            bottomLeftArea.y = topLeftArea.height
+            bottomRightArea = topLeftArea.copy()
+            bottomRightArea.x = topRightArea.width
+            bottomRightArea.y = topLeftArea.height
+
+            self.gameComponents[0].draw(topLeftArea)
+            self.gameComponents[1].draw(topRightArea)
+            self.gameComponents[2].draw(bottomLeftArea)
+            self.gameComponents[3].draw(bottomRightArea)
 
     def update(self, millisecondsSinceLastUpdate):
         for gameComponent in self.gameComponents:
