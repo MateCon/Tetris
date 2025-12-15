@@ -1,3 +1,4 @@
+from model.rotation_list import RotationList
 from model.tetris_game import TetrisGame
 from model.rotation_list_generator import NintendoRotationListGenerator
 from model.rand import RandStub
@@ -462,4 +463,139 @@ class TestBasicRules:
             "--",
             "oo",
             "oo",
+        ]
+
+    def test32_GameKnowsItsActivePieceCharacter(self):
+        random = RandStub([1])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        assert game.activeCharacter() == 'I'
+
+    def test33_BoardCanPreviewTheGhostPiece(self):
+        random = RandStub([2, 1])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hardDrop()
+
+        assert game.asStringListWithGhostPiece() == [
+            "---IIII---",
+            "----------",
+            "..........",
+            "...####...",
+            "...jjj....",
+            ".....j....",
+        ]
+
+    def test34_GhostPieceDoesNotAppearOverCurrentPiece(self):
+        random = RandStub([1, 2])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hardDrop()
+        game.softDrop()
+        game.softDrop()
+
+        assert game.asStringListWithGhostPiece() == [
+            "----------",
+            "----------",
+            "...JJJ....",
+            "...##J....",
+            ".....#....",
+            "...iiii...",
+        ]
+
+    def test35_HoldingAPieceWithAnEmptyQueueGoesToTheNextPiece(self):
+        random = RandStub([1, 4, 1])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hold()
+
+        assert game.asStringList() == [
+            "----OO----",
+            "----OO----",
+            "..........",
+            "..........",
+            "..........",
+            "..........",
+        ]
+
+    def test36_HoldingAPieceWithANonEmptyQueueSwapsThePieces(self):
+        random = RandStub([1, 4, 7, 2])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hold()
+        game.hardDrop()
+        game.hold()
+
+        assert game.asStringList() == [
+            "---IIII---",
+            "----------",
+            "..........",
+            "..........",
+            "....oo....",
+            "....oo....",
+        ]
+
+    def test37_HoldingAPieceResetsItToItsOriginalPosition(self):
+        random = RandStub([1, 4, 7, 2])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.softDrop()
+        game.hold()
+        game.hardDrop()
+        game.hold()
+
+        assert game.asStringList() == [
+            "---IIII---",
+            "----------",
+            "..........",
+            "..........",
+            "....oo....",
+            "....oo....",
+        ]
+
+    def test38_HoldingAPieceResetsItToItsOriginalRotation(self):
+        random = RandStub([1, 4, 7, 2])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.rotateRight()
+        game.hold()
+        game.hardDrop()
+        game.hold()
+
+        assert game.asStringList() == [
+            "---IIII---",
+            "----------",
+            "..........",
+            "..........",
+            "....oo....",
+            "....oo....",
+        ]
+
+    def test39_HoldingAPieceResetsItToItsOriginalRotationWhenStored(self):
+        random = RandStub([2, 1])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.rotateRight()
+        game.hold()
+
+        assert game.getHeldPiece().asStringList() == [
+            "....",
+            "JJJ.",
+            "..J.",
+        ]
+
+    def test40_APieceCanNotBeHeldOnceRemovedFromHoldingQueue(self):
+        random = RandStub([2, 1, 3])
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hold()
+        game.hold()
+
+        assert game.asStringList() == [
+            "---IIII---",
+            "----------",
+            "..........",
+            "..........",
+            "..........",
+            "..........",
         ]

@@ -29,3 +29,6 @@ class RotationList:
 
     def shiftRotation(self, aRotationIndex, anOffset):
         self.pieceShapes[aRotationIndex] = self.pieceShapes[aRotationIndex].shifted(anOffset)
+
+    def reset(self):
+        self.currentRotatationIndex = 0

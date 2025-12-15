@@ -30,6 +30,8 @@ class TetrisGame:
         self.currentPiece = self.currentBag.next()
         self.nextPiece = self.currentBag.next()
         self.eventNotifier = anEventNotifier
+        self.pieceHeld = NoPiece()
+        self.canHoldPiece = True
 
     def goToNextBag(self):
         self.currentBag = self.nextBag
@@ -40,6 +42,7 @@ class TetrisGame:
         if self.currentBag.isEmpty():
             self.goToNextBag()
         self.nextPiece = self.currentBag.next()
+        self.canHoldPiece = True
 
     def freezeCurrentPiece(self):
         self.playfield.addBlocks(self.currentPiece)
@@ -71,10 +74,27 @@ class TetrisGame:
     def hardDrop(self):
         self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.hardDrop, self.freezeCurrentPiece)
 
+    def hold(self):
+        if not self.canHoldPiece:
+            return
+        self.currentPiece.resetPosition()
+        self.currentPiece.resetRotation()
+        if isinstance(self.pieceHeld, NoPiece):
+            self.pieceHeld = self.currentPiece
+            self.goToNextPiece()
+        else:
+            previousPieceHeld = self.pieceHeld
+            self.pieceHeld = self.currentPiece
+            self.currentPiece = previousPieceHeld
+        self.canHoldPiece = False
+
+    def getHeldPiece(self):
+        return self.pieceHeld
+
     def checkForClearedLines(self):
         self.playfield.checkForClearedLines()
 
-    def asStringList(self):
+    def asCharMatrix(self):
         charMatrix = self.playfield.asCharMatrix()
 
         def callback(point):
@@ -82,6 +102,22 @@ class TetrisGame:
                 charMatrix[len(charMatrix) - point.y - 1][point.x] = self.currentPiece.activeCharacter()
 
         self.currentPiece.do(callback)
+
+        return charMatrix
+
+    def asStringList(self):
+        return [''.join(row) for row in self.asCharMatrix()]
+
+    def asStringListWithGhostPiece(self):
+        charMatrix = self.asCharMatrix()
+
+        def callback(point):
+            if self.playfield.pointIsInDisplayableArea(point):
+                previousPiece = charMatrix[len(charMatrix) - point.y - 1][point.x]
+                if not previousPiece.isupper():
+                    charMatrix[len(charMatrix) - point.y - 1][point.x] = '#'
+
+        self.currentPiece.ghost().do(callback)
 
         return [''.join(row) for row in charMatrix]
 
@@ -97,3 +133,6 @@ class TetrisGame:
     def getNextSix(self):
         allRemaining = [self.nextPiece] + self.currentBag.allRemaining() + self.nextBag.allRemaining()
         return allRemaining[0:6]
+
+    def activeCharacter(self):
+        return self.currentPiece.activeCharacter()

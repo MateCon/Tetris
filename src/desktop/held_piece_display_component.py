@@ -1,14 +1,15 @@
 from model.point import Point
 from desktop.area import Area
 from desktop.desktop_component import DesktopComponent
+from model.piece import Piece
 import pygame
 
 
-class NextPieceDisplayComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aGameComponent, theNextSixPieces, cellSize, aColorScheme):
+class HeldPieceDisplayComponent(DesktopComponent):
+    def __init__(self, anApplicationContext, aGameComponent, aHeldPiece, cellSize, aColorScheme):
         super().__init__(anApplicationContext)
         self.gameComponent = aGameComponent
-        self.nextSixPieces = theNextSixPieces
+        self.heldPiece = aHeldPiece
         self.cellSize = cellSize
         self.borderColor = (255, 255, 255)
         self.borderWidth = 2
@@ -24,8 +25,8 @@ class NextPieceDisplayComponent(DesktopComponent):
         actualArea = Area(anArea.x, anArea.y, componentSize.x, componentSize.y)
         innerArea = actualArea.withPadding(padding.x, padding.y)
         currentArea = innerArea.copy()
-        for piece in self.nextSixPieces:
-            board = piece.asStringList()
+        if isinstance(self.heldPiece, Piece):
+            board = self.heldPiece.asStringList()
             for y in range(3):
                 for x in range(4):
                     self.applicationContext.drawRect(
@@ -37,8 +38,8 @@ class NextPieceDisplayComponent(DesktopComponent):
                             self.cellSize
                         )
                 )
-            currentArea = currentArea.shifted(0, boardSize.y)
-        self.applicationContext.drawBigText("Next", (255, 255, 255), innerArea.asRect())
+        currentArea = currentArea.shifted(0, boardSize.y)
+        self.applicationContext.drawBigText("Held", (255, 255, 255), innerArea.asRect())
 
-    def update(self, millisecondsSinceLastUpdate, theNextSixPieces):
-        self.nextSixPieces = theNextSixPieces
+    def update(self, millisecondsSinceLastUpdate, aHeldPiece):
+        self.heldPiece = aHeldPiece

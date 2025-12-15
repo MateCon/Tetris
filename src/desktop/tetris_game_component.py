@@ -3,137 +3,8 @@ from desktop.desktop_component import DesktopComponent
 from desktop.area import Area
 from desktop.held_command_repeater import HeldCommandRepeater
 from desktop.next_piece_display_component import NextPieceDisplayComponent
-from abc import ABC, abstractmethod
-
-
-class GameActions(ABC):
-    @abstractmethod
-    def tick(self):
-        pass
-
-    @abstractmethod
-    def startMovingLeft(self):
-        pass
-
-    @abstractmethod
-    def stopMovingLeft(self):
-        pass
-
-    @abstractmethod
-    def startMovingRight(self):
-        pass
-
-    @abstractmethod
-    def stopMovingRight(self):
-        pass
-
-    @abstractmethod
-    def startDropping(self):
-        pass
-
-    @abstractmethod
-    def stopDropping(self):
-        pass
-
-    @abstractmethod
-    def hardDrop(self):
-        pass
-
-    @abstractmethod
-    def rotateLeft(self):
-        pass
-
-    @abstractmethod
-    def rotateRight(self):
-        pass
-
-
-class RunningGameActions(GameActions):
-    def __init__(self, aGame, aLeftCommandRepeater, aRightCommandRepeater, aDropCommandRepeater):
-        self.game = aGame
-        self.leftCommandRepeater = aLeftCommandRepeater
-        self.rightCommandRepeater = aRightCommandRepeater
-        self.dropCommandRepeater = aDropCommandRepeater
-
-    def tick(self):
-        self.game.tick()
-
-    def startMovingLeft(self):
-        self.leftCommandRepeater.start()
-
-    def stopMovingLeft(self):
-        self.leftCommandRepeater.stop()
-
-    def startMovingRight(self):
-        self.rightCommandRepeater.start()
-
-    def stopMovingRight(self):
-        self.rightCommandRepeater.stop()
-
-    def startDropping(self):
-        self.dropCommandRepeater.start()
-
-    def stopDropping(self):
-        self.dropCommandRepeater.stop()
-
-    def hardDrop(self):
-        self.game.hardDrop()
-
-    def rotateLeft(self):
-        self.game.rotateLeft()
-
-    def rotateRight(self):
-        self.game.rotateRight()
-
-    def togglePause(self):
-        return PausedGameActions(self.game, self.leftCommandRepeater, self.rightCommandRepeater, self.dropCommandRepeater)
-
-    def isPaused(self):
-        return False
-
-
-class PausedGameActions(GameActions):
-    def __init__(self, aGame, aLeftCommandRepeater, aRightCommandRepeater, aDropCommandRepeater):
-        self.game = aGame
-        self.leftCommandRepeater = aLeftCommandRepeater
-        self.rightCommandRepeater = aRightCommandRepeater
-        self.dropCommandRepeater = aDropCommandRepeater
-
-    def tick(self):
-        pass
-
-    def startMovingLeft(self):
-        pass
-
-    def stopMovingLeft(self):
-        pass
-
-    def startMovingRight(self):
-        pass
-
-    def stopMovingRight(self):
-        pass
-
-    def startDropping(self):
-        pass
-
-    def stopDropping(self):
-        pass
-
-    def hardDrop(self):
-        pass
-
-    def rotateLeft(self):
-        pass
-
-    def rotateRight(self):
-        pass
-
-    def togglePause(self):
-        return RunningGameActions(self.game, self.leftCommandRepeater, self.rightCommandRepeater, self.dropCommandRepeater)
-
-    def isPaused(self):
-        return True
+from desktop.held_piece_display_component import HeldPieceDisplayComponent
+from desktop.game_actions import RunningGameActions
 
 
 class TetrisGameComponent(DesktopComponent):
@@ -149,6 +20,7 @@ class TetrisGameComponent(DesktopComponent):
         self.inputObserver = self.applicationContext.inputObserver
         self.tetrisEventNotifier = aTetrisEventNotifier
         self.nextPieceDisplayComponent = NextPieceDisplayComponent(self.applicationContext, self, self.nextSixPieces(), self.cellSize, self.colorScheme)
+        self.heldPieceDisplayComponent = HeldPieceDisplayComponent(self.applicationContext, self, self.getHeldPiece(), self.cellSize, self.colorScheme)
 
         self.leftCommandRepeater = HeldCommandRepeater(self.game.moveLeft, 167, 33)
         self.rightCommandRepeater = HeldCommandRepeater(self.game.moveRight, 167, 33)
@@ -195,6 +67,12 @@ class TetrisGameComponent(DesktopComponent):
     def rotateRight(self):
         self.gameActions.rotateRight()
 
+    def hold(self):
+        self.gameActions.hold()
+
+    def getHeldPiece(self):
+        return self.game.getHeldPiece()
+
     def togglePause(self):
         self.gameActions = self.gameActions.togglePause()
 
@@ -227,11 +105,14 @@ class TetrisGameComponent(DesktopComponent):
             aRectangle.height
         ))
 
+    def activeCharacter(self):
+        return self.game.activeCharacter()
+
     def cellColor(self, aCell):
-        return self.colorScheme.cellColor(aCell, self.isPaused())
+        return self.colorScheme.cellColor(aCell, self.isPaused(), self.activeCharacter().lower())
 
     def drawBoard(self, anArea):
-        board = self.game.asStringList()
+        board = self.game.asStringListWithGhostPiece()
         for y in range(self.rows + 2):
             for x in range(self.cols):
                 self.applicationContext.drawRect(
@@ -258,17 +139,17 @@ class TetrisGameComponent(DesktopComponent):
         self.applicationContext.drawBigText(
             f"Level {self.currentLevel()}",
             (255, 255, 255),
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, 0).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3).asRect()
         )
         self.applicationContext.drawBigText(
             f"Lines cleared: {self.linesCleared}",
             (255, 255, 255),
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, 40).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 40).asRect()
         )
         self.applicationContext.drawBigText(
             f"Score: {self.score}",
             (255, 255, 255),
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, 80).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 80).asRect()
         )
 
         self.drawBoard(self.centeredArea(anArea))
@@ -276,6 +157,10 @@ class TetrisGameComponent(DesktopComponent):
         self.nextPieceDisplayComponent.draw(
             self.centeredArea(anArea)
                 .shifted(self.cellSize + self.area().width, 0)
+        )
+        self.heldPieceDisplayComponent.draw(
+            self.centeredArea(anArea)
+                .shifted(-self.cellSize * 8, 0)
         )
 
     def nextSixPieces(self):
@@ -302,6 +187,7 @@ class TetrisGameComponent(DesktopComponent):
         self.dropCommandRepeater.update(millisecondsSinceLastUpdate)
 
         self.nextPieceDisplayComponent.update(millisecondsSinceLastUpdate, self.nextSixPieces())
+        self.heldPieceDisplayComponent.update(millisecondsSinceLastUpdate, self.getHeldPiece())
 
     def destroy(self):
         self.inputObserver.removeFrom(self)

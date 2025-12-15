@@ -29,6 +29,8 @@ class JoystickAxisHandler:
         self.joystickLeftStickDown = False
         self.joystickRightStickLeft = False
         self.joystickRightStickRight = False
+        self.joystickRightStickUp = False
+        self.joystickRightStickDown = False
 
     def handleAxisMovement(self):
         joystickId = self.joystick.get_instance_id()
@@ -74,6 +76,58 @@ class JoystickAxisHandler:
             self.applicationContext.inputObserver.keyup("JOYSTICK_RIGHT_STICK_RIGHT", joystickId)
             self.joystickRightStickRight = False
 
+        if self.joystick.get_axis(4) < -0.5 and not self.joystickRightStickUp:
+            self.applicationContext.inputObserver.keydown("JOYSTICK_RIGHT_STICK_UP", joystickId)
+            self.joystickRightStickUp = True
+        if self.joystick.get_axis(4) >= -0.5 and self.joystickRightStickUp:
+            self.applicationContext.inputObserver.keyup("JOYSTICK_RIGHT_STICK_UP", joystickId)
+            self.joystickRightStickUp = False
+
+        if self.joystick.get_axis(4) >= 0.5 and not self.joystickRightStickDown:
+            self.applicationContext.inputObserver.keydown("JOYSTICK_RIGHT_STICK_DOWN", joystickId)
+            self.joystickRightStickDown = True
+        if self.joystick.get_axis(4) < 0.5 and self.joystickRightStickDown:
+            self.applicationContext.inputObserver.keyup("JOYSTICK_RIGHT_STICK_DOWN", joystickId)
+            self.joystickRightStickDown = False
+
+
+class JoystickHatHandler:
+    def __init__(self, aJoystick, anApplicationContext):
+        self.joystick = aJoystick
+        self.applicationContext = anApplicationContext
+        self.left = False
+        self.right = False
+        self.up = False
+        self.down = False
+
+    def handleHatMovement(self):
+        joystickId = self.joystick.get_instance_id()
+        x, y = self.joystick.get_hat(0)
+        if x == -1 and not self.left:
+            self.applicationContext.inputObserver.keydown("JOYSTICK_HAT_LEFT", joystickId)
+            self.left = True
+        if x != -1 and self.left:
+            self.applicationContext.inputObserver.keyup("JOYSTICK_HAT_LEFT", joystickId)
+            self.left = False
+        if x == 1 and not self.right:
+            self.applicationContext.inputObserver.keydown("JOYSTICK_HAT_RIGHT", joystickId)
+            self.right = True
+        if x != 1 and self.right:
+            self.applicationContext.inputObserver.keyup("JOYSTICK_HAT_RIGHT", joystickId)
+            self.right = False
+        if y == -1 and not self.down:
+            self.applicationContext.inputObserver.keydown("JOYSTICK_HAT_DOWN", joystickId)
+            self.down = True
+        if y != -1 and self.down:
+            self.applicationContext.inputObserver.keyup("JOYSTICK_HAT_DOWN", joystickId)
+            self.down = False
+        if y == 1 and not self.up:
+            self.applicationContext.inputObserver.keydown("JOYSTICK_HAT_UP", joystickId)
+            self.up = True
+        if y != 1 and self.up:
+            self.applicationContext.inputObserver.keyup("JOYSTICK_HAT_UP", joystickId)
+            self.up = False
+
 
 class DesktopApplicationRunner:
     def __init__(self):
@@ -84,7 +138,7 @@ class DesktopApplicationRunner:
         self.clock = pygame.time.Clock()
         self.joystickLifecycleObserver = JoystickLifecycleObserver()
         self.applicationContext = ApplicationContext(
-            pygame.display.set_mode((1280,720)),
+            pygame.display.set_mode(),
             InputObserver(),
             self.createFont(),
             self.joysticks,
@@ -93,13 +147,18 @@ class DesktopApplicationRunner:
         self.page = PlayPageComponent(self.applicationContext)
         self.timeSinceLastFrame = 0
         self.joystickAxisHandlers = {}
+        self.joystickHatHandlers = {}
+        self.applicationContext.joystickLifecycleObserver.onJoystickCreation(self.addJoystickHatHandler)
         self.applicationContext.joystickLifecycleObserver.onJoystickCreation(self.addJoystickAxisHandler)
+
+    def addJoystickHatHandler(self, aJoystickId):
+        self.joystickHatHandlers[aJoystickId] = JoystickHatHandler(aJoystickId, self.applicationContext)
 
     def addJoystickAxisHandler(self, aJoystickId):
         self.joystickAxisHandlers[aJoystickId] = JoystickAxisHandler(aJoystickId, self.applicationContext)
 
     def createFont(self):
-        return pygame.font.Font("../assets/fonts/charybdis.regular.ttf", 22)
+        return pygame.font.Font("assets/fonts/charybdis.regular.ttf", 22)
 
     def eventHandler(self):
         for event in pygame.event.get():
@@ -111,19 +170,28 @@ class DesktopApplicationRunner:
             if event.type == pygame.KEYUP:
                 self.applicationContext.inputObserver.keyup(event.key, 0)
             if event.type == pygame.JOYBUTTONDOWN:
-                print(event.button)
-                self.applicationContext.inputObserver.keydown(event.button, event.instance_id)
+                button = event.button
+                print(button)
+                key = None
+                if button == 4:
+                    key = "JOYSTICK_LEFT_BUMPER"
+                if button == 5:
+                    key = "JOYSTICK_RIGHT_BUMPER"
+                if button == 9:
+                    key = "JOYSTICK_PAUSE"
+                if key:
+                    self.applicationContext.inputObserver.keydown(key, event.instance_id)
             if event.type == pygame.JOYBUTTONUP:
                 self.applicationContext.inputObserver.keyup(event.button, event.instance_id)
             if event.type == pygame.JOYDEVICEADDED:
                 joy = pygame.joystick.Joystick(event.device_index)
                 self.joysticks[joy.get_instance_id()] = joy
                 self.joystickLifecycleObserver.joystickWasCreated(joy)
-                print(f"Joystick {joy.get_instance_id()} connencted")
-
             if event.type == pygame.JOYDEVICEREMOVED:
                 del self.joysticks[event.instance_id]
-                print(f"Joystick {event.instance_id} disconnected")
+
+        for joystickHatHandler in self.joystickHatHandlers.values():
+            joystickHatHandler.handleHatMovement()
 
         for joystickAxisHandler in self.joystickAxisHandlers.values():
             joystickAxisHandler.handleAxisMovement()

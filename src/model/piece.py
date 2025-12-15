@@ -1,6 +1,10 @@
+from model.point import Point
+
+
 class Piece:
     def __init__(self, aPosition, aRotationList, aPlayfield, aKickAlgoritm, anActiveCharacter):
         self.position = aPosition
+        self.initialPosition = aPosition
         self.rotationList = aRotationList
         self.playfield = aPlayfield
         self.kickAlgoritm = aKickAlgoritm
@@ -30,6 +34,9 @@ class Piece:
             aHandlerWhenCanMove()
         else:
             aHandlerWhenCantMove()
+
+    def moveIfCanMove(self, anOffset, aHandlerWhenCanMove):
+        self.moveIfCanMoveIfCantMove(anOffset, aHandlerWhenCanMove, lambda: None)
 
     def moveIfCantMove(self, anOffset, aHandlerWhenCantMove):
         self.moveIfCanMoveIfCantMove(anOffset, lambda: None, aHandlerWhenCantMove)
@@ -76,6 +83,22 @@ class Piece:
 
         return [''.join(row) for row in charMatrix]
 
+    def ghost(self):
+        ghost = Piece(self.position, self.rotationList, self.playfield, self.kickAlgoritm, self.activeChar)
+
+        def drop():
+            ghost.moveIfCanMove(Point(0, -1), drop)
+
+        drop()
+
+        return ghost
+
+    def resetPosition(self):
+        self.position = self.initialPosition
+
+    def resetRotation(self):
+        self.rotationList.reset()
+
 
 class NoPiece:
     def do(self, aCallback):
@@ -97,10 +120,10 @@ class NoPiece:
         pass
 
     def activeCharacter(self):
-        return ''
+        return '.'
 
     def inactiveCharacter(self):
-        return ''
+        return '.'
 
     def canBlockRotate(self, blockPosition):
         return False
@@ -116,3 +139,12 @@ class NoPiece:
 
     def asStringList(self):
         return []
+
+    def resetPosition(self):
+        pass
+
+    def resetRotation(self):
+        pass
+
+    def ghost(self):
+        return NoPiece()

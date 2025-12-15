@@ -20,9 +20,17 @@ class ColorScheme:
             'z': pygame.Color(0, 255, 0),
         }
 
-    def cellColor(self, aCell, isPaused):
-        if aCell in self.colors.keys():
-            color = self.colors[aCell]
+    def cellColor(self, aChar, isPaused, currentPiece):
+        isGhost = False
+
+        if aChar == '#':
+            aChar = currentPiece
+            isGhost = True
+
+        if aChar in self.colors.keys():
+            color = self.colors[aChar]
+            if isGhost:
+                color = pygame.Color(color.r // 5, color.g // 5, color.b // 5)
             if isPaused:
                 return color.grayscale()
             return color
@@ -87,10 +95,12 @@ class PlayPageComponent(DesktopComponent):
         aGameComponent.mapKeydown(0, pygame.K_s, aGameComponent.startDropping)
         aGameComponent.mapKeyup(0, pygame.K_s, aGameComponent.stopDropping)
         aGameComponent.mapKeydown(0, pygame.K_w, aGameComponent.hardDrop)
+        aGameComponent.mapKeydown(0, pygame.K_SPACE, aGameComponent.hardDrop)
         aGameComponent.mapKeydown(0, pygame.K_a, aGameComponent.rotateLeft)
         aGameComponent.mapKeydown(0, pygame.K_d, aGameComponent.rotateRight)
         aGameComponent.mapKeydown(0, pygame.K_DOWN, aGameComponent.rotateLeft)
         aGameComponent.mapKeydown(0, pygame.K_UP, aGameComponent.rotateRight)
+        aGameComponent.mapKeydown(0, pygame.K_LSHIFT, aGameComponent.hold)
         aGameComponent.mapKeydown(0, pygame.K_ESCAPE, aGameComponent.togglePause)
 
     def createJoystickMapper(self, aDeviceId):
@@ -102,8 +112,22 @@ class PlayPageComponent(DesktopComponent):
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.startDropping)
             aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.stopDropping)
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_UP", aGameComponent.hardDrop)
+
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_HAT_LEFT", aGameComponent.startMovingLeft)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_HAT_LEFT", aGameComponent.stopMovingLeft)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_HAT_RIGHT", aGameComponent.startMovingRight)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_HAT_RIGHT", aGameComponent.stopMovingRight)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_HAT_DOWN", aGameComponent.startDropping)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_HAT_DOWN", aGameComponent.stopDropping)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_HAT_UP", aGameComponent.hardDrop)
+
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_STICK_LEFT", aGameComponent.rotateLeft)
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_STICK_RIGHT", aGameComponent.rotateRight)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_STICK_UP", aGameComponent.hold)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_BUMPER", aGameComponent.rotateLeft)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_BUMPER", aGameComponent.rotateRight)
+
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_PAUSE", aGameComponent.togglePause)
 
         return mapJoystick
 
