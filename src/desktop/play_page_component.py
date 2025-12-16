@@ -50,6 +50,8 @@ class PlayPageComponent(DesktopComponent):
 
         self.gameComponents = {}
 
+        self.createGameComponentWithKeyboard()
+
         for joystick in self.applicationContext.joysticks.values():
             self.createGameComponentWithJoystick(joystick)
 
