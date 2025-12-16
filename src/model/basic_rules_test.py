@@ -599,3 +599,19 @@ class TestBasicRules:
             "..........",
             "..........",
         ]
+
+    def test41_GameCanBeLostWithABlockAboveTheVanishZone(self):
+        random = RandStub([4, 1, 1])
+        game = TetrisGame(6, 2, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hardDrop()
+        game.rotateRight()
+        game.tick()
+        game.tick()
+
+        assert game.asStringList() == [
+            "---i--",
+            "---i--",
+            "..oo..",
+            "..oo..",
+        ]

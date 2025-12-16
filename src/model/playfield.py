@@ -9,7 +9,7 @@ class Playfield:
         self.blocks = []
         self.eventNotifier = anEventNotifier
 
-        for _ in range(self.height + 2):
+        for _ in range(self.height + 4):
             currentRow = []
             for _ in range(self.width):
                 currentRow.append(Cell(self))

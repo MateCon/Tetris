@@ -48,23 +48,26 @@ class PlayPageComponent(DesktopComponent):
         self.cols = 10
         self.cellSize = 25
 
-        self.gameComponents = []
-
-        self.createGameComponent(self.mapKeyboard)
+        self.gameComponents = {}
 
         for joystick in self.applicationContext.joysticks.values():
             self.createGameComponentWithJoystick(joystick)
 
+        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_INSERT, 0, self.createGameComponentWithKeyboard)
         self.applicationContext.joystickLifecycleObserver.onJoystickCreation(self.createGameComponentWithJoystick)
         self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_DELETE, 0, self.restartGame)
 
     def destroy(self):
         self.applicationContext.inputObserver.removeFrom(self)
 
-    def createGameComponentWithJoystick(self, aJoystick):
-        self.createGameComponent(self.createJoystickMapper(aJoystick.get_instance_id()))
+    def createGameComponentWithKeyboard(self):
+        self.createGameComponent(0, self.mapKeyboard)
 
-    def createGameComponent(self, aKeybindMapper):
+    def createGameComponentWithJoystick(self, aJoystick):
+        instanceId = aJoystick.get_instance_id()
+        self.createGameComponent(instanceId, self.createJoystickMapper(instanceId))
+
+    def createGameComponent(self, anInstanceId, aKeybindMapper):
         tetrisEventNotifier = TetrisEventNotifier()
         game = TetrisGame(
             self.cols,
@@ -85,7 +88,9 @@ class PlayPageComponent(DesktopComponent):
             aKeybindMapper,
             ColorScheme()
         )
-        self.gameComponents.append(gameComponent)
+        if anInstanceId in self.gameComponents.keys():
+            self.gameComponents[anInstanceId].destroy()
+        self.gameComponents[anInstanceId] = gameComponent
 
     def mapKeyboard(self, aGameComponent):
         aGameComponent.mapKeydown(0, pygame.K_LEFT, aGameComponent.startMovingLeft)
@@ -132,7 +137,7 @@ class PlayPageComponent(DesktopComponent):
         return mapJoystick
 
     def restartGame(self):
-        for gameComponent in self.gameComponents:
+        for gameComponent in self.gameComponents.values():
             gameComponent.destroy()
         self.initializeGame()
 
@@ -176,5 +181,5 @@ class PlayPageComponent(DesktopComponent):
             self.gameComponents[3].draw(bottomRightArea)
 
     def update(self, millisecondsSinceLastUpdate):
-        for gameComponent in self.gameComponents:
+        for gameComponent in self.gameComponents.values():
             gameComponent.update(millisecondsSinceLastUpdate)
