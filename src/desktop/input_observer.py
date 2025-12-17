@@ -40,3 +40,9 @@ class InputObserver:
     def removeFrom(self, aSenderObject):
         self.removeFromIn(aSenderObject, self.keyupHandlers)
         self.removeFromIn(aSenderObject, self.keydownHandlers)
+
+    def removePair(self, aKey, aDevice):
+        if (aKey, aDevice) in self.keydownHandlers.keys():
+            del self.keydownHandlers[(aKey, aDevice)]
+        if (aKey, aDevice) in self.keyupHandlers.keys():
+            del self.keyupHandlers[(aKey, aDevice)]

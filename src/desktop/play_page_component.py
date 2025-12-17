@@ -1,3 +1,4 @@
+from pygame.joystick import Joystick
 from desktop.desktop_component import DesktopComponent
 from desktop.tetris_game_component import TetrisGameComponent
 from model.tetris_event_notifier import TetrisEventNotifier
@@ -40,9 +41,9 @@ class ColorScheme:
 class PlayPageComponent(DesktopComponent):
     def __init__(self, anApplicationContext):
         super().__init__(anApplicationContext)
-        self.initializeGame()
+        self.initializeAllGames()
 
-    def initializeGame(self):
+    def initializeAllGames(self):
         self.destroy()
         self.rows = 20
         self.cols = 10
@@ -56,8 +57,18 @@ class PlayPageComponent(DesktopComponent):
             self.createGameComponentWithJoystick(joystick)
 
         self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_INSERT, 0, self.createGameComponentWithKeyboard)
-        self.applicationContext.joystickLifecycleObserver.onJoystickCreation(self.createGameComponentWithJoystick)
-        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_DELETE, 0, self.restartGame)
+        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_DELETE, 0, self.restartAllGames)
+
+        self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.mapHomeToggle)
+        self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.deleteGameComponentWithJoystickId)
+        self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.unmapHomeToggle)
+
+    def mapHomeToggle(self, aJoystick):
+        instanceId = aJoystick.get_instance_id()
+        self.applicationContext.inputObserver.addKeydownObserver(self, "JOYSTICK_HOME", instanceId, lambda: self.toggleGameFrom(instanceId))
+
+    def unmapHomeToggle(self, anInstanceId):
+        self.applicationContext.inputObserver.removePair(anInstanceId, "JOYSTICK_HOME")
 
     def destroy(self):
         self.applicationContext.inputObserver.removeFrom(self)
@@ -65,9 +76,16 @@ class PlayPageComponent(DesktopComponent):
     def createGameComponentWithKeyboard(self):
         self.createGameComponent(0, self.mapKeyboard)
 
+    def createGameComponentWithJoystickId(self, anInstenceId):
+        self.createGameComponent(anInstenceId, self.createJoystickMapper(anInstenceId))
+
     def createGameComponentWithJoystick(self, aJoystick):
-        instanceId = aJoystick.get_instance_id()
-        self.createGameComponent(instanceId, self.createJoystickMapper(instanceId))
+        self.createGameComponentWithJoystickId(aJoystick.get_instance_id())
+
+    def deleteGameComponentWithJoystickId(self, anInstenceId):
+        if anInstenceId in self.gameComponents.keys():
+            self.gameComponents[anInstenceId].destroy()
+            del self.gameComponents[anInstenceId]
 
     def createGameComponent(self, anInstanceId, aKeybindMapper):
         tetrisEventNotifier = TetrisEventNotifier()
@@ -114,8 +132,14 @@ class PlayPageComponent(DesktopComponent):
         def mapJoystick(aGameComponent):
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_LEFT", aGameComponent.startMovingLeft)
             aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_LEFT", aGameComponent.stopMovingLeft)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_TRIGGER", aGameComponent.startMovingLeft)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_TRIGGER", aGameComponent.stopMovingLeft)
+
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_RIGHT", aGameComponent.startMovingRight)
             aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_RIGHT", aGameComponent.stopMovingRight)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_TRIGGER", aGameComponent.startMovingRight)
+            aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_RIGHT_TRIGGER", aGameComponent.stopMovingRight)
+
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.startDropping)
             aGameComponent.mapKeyup(aDeviceId, "JOYSTICK_LEFT_STICK_DOWN", aGameComponent.stopDropping)
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_LEFT_STICK_UP", aGameComponent.hardDrop)
@@ -135,25 +159,42 @@ class PlayPageComponent(DesktopComponent):
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_RIGHT_BUMPER", aGameComponent.rotateRight)
 
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_PAUSE", aGameComponent.togglePause)
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_TRIANGLE", lambda: self.restartGame(aDeviceId))
 
         return mapJoystick
 
-    def restartGame(self):
+    def restartGame(self, aDeviceId):
+        self.gameComponents[aDeviceId].destroy()
+        self.createGameComponentWithJoystickId(aDeviceId)
+
+    def toggleGameFrom(self, aDeviceId):
+        if aDeviceId in self.gameComponents.keys():
+            self.gameComponents[aDeviceId].destroy()
+            del self.gameComponents[aDeviceId]
+        else:
+            self.createGameComponentWithJoystickId(aDeviceId)
+
+    def restartAllGames(self):
         for gameComponent in self.gameComponents.values():
             gameComponent.destroy()
-        self.initializeGame()
+        self.initializeAllGames()
 
     def draw(self, anArea):
+        keysSet = self.gameComponents.keys()
+        keys = []
+        for key in keysSet:
+            keys.append(key)
+        keys.sort()
         if len(self.gameComponents) == 1:
-            self.gameComponents[0].draw(anArea)
+            self.gameComponents[keys[0]].draw(anArea)
         if len(self.gameComponents) == 2:
             leftArea = anArea.copy()
             leftArea.width /= 2
             rightArea = leftArea.copy()
             rightArea.x = rightArea.width
 
-            self.gameComponents[0].draw(leftArea)
-            self.gameComponents[1].draw(rightArea)
+            self.gameComponents[keys[0]].draw(leftArea)
+            self.gameComponents[keys[1]].draw(rightArea)
         if len(self.gameComponents) == 3:
             leftArea = anArea.copy()
             leftArea.width /= 3
@@ -162,9 +203,9 @@ class PlayPageComponent(DesktopComponent):
             rightArea = leftArea.copy()
             rightArea.x = rightArea.width * 2
 
-            self.gameComponents[0].draw(leftArea)
-            self.gameComponents[1].draw(middleArea)
-            self.gameComponents[2].draw(rightArea)
+            self.gameComponents[keys[0]].draw(leftArea)
+            self.gameComponents[keys[1]].draw(middleArea)
+            self.gameComponents[keys[2]].draw(rightArea)
         if len(self.gameComponents) == 4:
             topLeftArea = anArea.copy()
             topLeftArea.width /= 2
@@ -177,10 +218,10 @@ class PlayPageComponent(DesktopComponent):
             bottomRightArea.x = topRightArea.width
             bottomRightArea.y = topLeftArea.height
 
-            self.gameComponents[0].draw(topLeftArea)
-            self.gameComponents[1].draw(topRightArea)
-            self.gameComponents[2].draw(bottomLeftArea)
-            self.gameComponents[3].draw(bottomRightArea)
+            self.gameComponents[keys[0]].draw(topLeftArea)
+            self.gameComponents[keys[1]].draw(topRightArea)
+            self.gameComponents[keys[2]].draw(bottomLeftArea)
+            self.gameComponents[keys[3]].draw(bottomRightArea)
 
     def update(self, millisecondsSinceLastUpdate):
         for gameComponent in self.gameComponents.values():
