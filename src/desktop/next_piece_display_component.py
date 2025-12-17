@@ -38,7 +38,7 @@ class NextPieceDisplayComponent(DesktopComponent):
                         )
                 )
             currentArea = currentArea.shifted(0, boardSize.y)
-        self.applicationContext.drawBigText("Next", (255, 255, 255), innerArea.asRect())
+        self.applicationContext.drawText("Next", (255, 255, 255), 22, innerArea.asRect())
 
     def update(self, millisecondsSinceLastUpdate, theNextSixPieces):
         self.nextSixPieces = theNextSixPieces

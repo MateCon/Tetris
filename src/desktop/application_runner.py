@@ -17,7 +17,6 @@ class DesktopApplicationRunner:
         self.applicationContext = ApplicationContext(
             pygame.display.set_mode(),
             InputObserver(),
-            self.createFont(),
             self.joysticks,
             self.joystickLifecycleObserver
         )
@@ -28,9 +27,6 @@ class DesktopApplicationRunner:
 
     def addJoystickObserver(self, aJoystickId):
         self.joystickObservers[aJoystickId] = JoystickObserver(aJoystickId, self.applicationContext)
-
-    def createFont(self):
-        return pygame.font.Font("assets/fonts/charybdis.regular.ttf", 22)
 
     def eventHandler(self):
         for event in pygame.event.get():

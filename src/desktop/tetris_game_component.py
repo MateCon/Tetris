@@ -136,19 +136,19 @@ class TetrisGameComponent(DesktopComponent):
         )
 
     def draw(self, anArea):
-        self.applicationContext.drawBigText(
+        self.applicationContext.drawText(
             f"Level {self.currentLevel()}",
-            (255, 255, 255),
+            (255, 255, 255), 22,
             self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3).asRect()
         )
-        self.applicationContext.drawBigText(
+        self.applicationContext.drawText(
             f"Lines cleared: {self.linesCleared}",
-            (255, 255, 255),
+            (255, 255, 255), 22,
             self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 40).asRect()
         )
-        self.applicationContext.drawBigText(
+        self.applicationContext.drawText(
             f"Score: {self.score}",
-            (255, 255, 255),
+            (255, 255, 255), 22,
             self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 80).asRect()
         )
 
@@ -162,6 +162,13 @@ class TetrisGameComponent(DesktopComponent):
             self.centeredArea(anArea)
                 .shifted(-self.cellSize * 8, 0)
         )
+
+        if self.isPaused():
+            self.applicationContext.drawText(
+                "PAUSED",
+                (255, 255, 255), 38,
+                self.centeredArea(anArea).shifted(self.cellSize * 3, self.cellSize * 10).asRect()
+            )
 
     def nextSixPieces(self):
         return self.game.getNextSix()
