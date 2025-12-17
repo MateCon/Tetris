@@ -3,7 +3,7 @@ from desktop.desktop_component import DesktopComponent
 from desktop.tetris_game_component import TetrisGameComponent
 from model.tetris_event_notifier import TetrisEventNotifier
 from model.tetris_game import TetrisGame
-from model.rotation_list_generator import NintendoRotationListGenerator
+from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator
 from model.kicks import ARSKicks
 from model.rand import Rand
 import pygame
@@ -56,8 +56,8 @@ class PlayPageComponent(DesktopComponent):
         for joystick in self.applicationContext.joysticks.values():
             self.createGameComponentWithJoystick(joystick)
 
-        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_INSERT, 0, self.createGameComponentWithKeyboard)
-        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_DELETE, 0, self.restartAllGames)
+        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_INSERT, 100, self.createGameComponentWithKeyboard)
+        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_DELETE, 100, self.deleteGameComponentWithKeyboard)
 
         self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.mapHomeToggle)
         self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.deleteGameComponentWithJoystickId)
@@ -74,7 +74,12 @@ class PlayPageComponent(DesktopComponent):
         self.applicationContext.inputObserver.removeFrom(self)
 
     def createGameComponentWithKeyboard(self):
-        self.createGameComponent(0, self.mapKeyboard)
+        self.createGameComponent(100, self.mapKeyboard)
+
+    def deleteGameComponentWithKeyboard(self):
+        if 100 in self.gameComponents.keys():
+            self.gameComponents[100].destroy()
+            del self.gameComponents[100]
 
     def createGameComponentWithJoystickId(self, anInstenceId):
         self.createGameComponent(anInstenceId, self.createJoystickMapper(anInstenceId))
@@ -93,7 +98,7 @@ class PlayPageComponent(DesktopComponent):
             self.cols,
             self.rows,
             Rand(),
-            NintendoRotationListGenerator,
+            SegaRotationListGenerator,
             ARSKicks,
             tetrisEventNotifier
         )
@@ -108,25 +113,24 @@ class PlayPageComponent(DesktopComponent):
             aKeybindMapper,
             ColorScheme()
         )
-        if anInstanceId in self.gameComponents.keys():
-            self.gameComponents[anInstanceId].destroy()
-        self.gameComponents[anInstanceId] = gameComponent
+        if not anInstanceId in self.gameComponents.keys():
+            self.gameComponents[anInstanceId] = gameComponent
 
     def mapKeyboard(self, aGameComponent):
-        aGameComponent.mapKeydown(0, pygame.K_LEFT, aGameComponent.startMovingLeft)
-        aGameComponent.mapKeyup(0, pygame.K_LEFT, aGameComponent.stopMovingLeft)
-        aGameComponent.mapKeydown(0, pygame.K_RIGHT, aGameComponent.startMovingRight)
-        aGameComponent.mapKeyup(0, pygame.K_RIGHT, aGameComponent.stopMovingRight)
-        aGameComponent.mapKeydown(0, pygame.K_s, aGameComponent.startDropping)
-        aGameComponent.mapKeyup(0, pygame.K_s, aGameComponent.stopDropping)
-        aGameComponent.mapKeydown(0, pygame.K_w, aGameComponent.hardDrop)
-        aGameComponent.mapKeydown(0, pygame.K_SPACE, aGameComponent.hardDrop)
-        aGameComponent.mapKeydown(0, pygame.K_a, aGameComponent.rotateLeft)
-        aGameComponent.mapKeydown(0, pygame.K_d, aGameComponent.rotateRight)
-        aGameComponent.mapKeydown(0, pygame.K_DOWN, aGameComponent.rotateLeft)
-        aGameComponent.mapKeydown(0, pygame.K_UP, aGameComponent.rotateRight)
-        aGameComponent.mapKeydown(0, pygame.K_LSHIFT, aGameComponent.hold)
-        aGameComponent.mapKeydown(0, pygame.K_ESCAPE, aGameComponent.togglePause)
+        aGameComponent.mapKeydown(100, pygame.K_LEFT, aGameComponent.startMovingLeft)
+        aGameComponent.mapKeyup(100, pygame.K_LEFT, aGameComponent.stopMovingLeft)
+        aGameComponent.mapKeydown(100, pygame.K_RIGHT, aGameComponent.startMovingRight)
+        aGameComponent.mapKeyup(100, pygame.K_RIGHT, aGameComponent.stopMovingRight)
+        aGameComponent.mapKeydown(100, pygame.K_s, aGameComponent.startDropping)
+        aGameComponent.mapKeyup(100, pygame.K_s, aGameComponent.stopDropping)
+        aGameComponent.mapKeydown(100, pygame.K_w, aGameComponent.hardDrop)
+        aGameComponent.mapKeydown(100, pygame.K_SPACE, aGameComponent.hardDrop)
+        aGameComponent.mapKeydown(100, pygame.K_a, aGameComponent.rotateLeft)
+        aGameComponent.mapKeydown(100, pygame.K_d, aGameComponent.rotateRight)
+        aGameComponent.mapKeydown(100, pygame.K_DOWN, aGameComponent.rotateLeft)
+        aGameComponent.mapKeydown(100, pygame.K_UP, aGameComponent.rotateRight)
+        aGameComponent.mapKeydown(100, pygame.K_LSHIFT, aGameComponent.hold)
+        aGameComponent.mapKeydown(100, pygame.K_ESCAPE, aGameComponent.togglePause)
 
     def createJoystickMapper(self, aDeviceId):
         def mapJoystick(aGameComponent):
@@ -164,7 +168,7 @@ class PlayPageComponent(DesktopComponent):
         return mapJoystick
 
     def restartGame(self, aDeviceId):
-        self.gameComponents[aDeviceId].destroy()
+        self.deleteGameComponentWithJoystickId(aDeviceId)
         self.createGameComponentWithJoystickId(aDeviceId)
 
     def toggleGameFrom(self, aDeviceId):
@@ -173,11 +177,6 @@ class PlayPageComponent(DesktopComponent):
             del self.gameComponents[aDeviceId]
         else:
             self.createGameComponentWithJoystickId(aDeviceId)
-
-    def restartAllGames(self):
-        for gameComponent in self.gameComponents.values():
-            gameComponent.destroy()
-        self.initializeAllGames()
 
     def draw(self, anArea):
         keysSet = self.gameComponents.keys()

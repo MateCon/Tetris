@@ -39,7 +39,7 @@ class HeldPieceDisplayComponent(DesktopComponent):
                         )
                 )
         currentArea = currentArea.shifted(0, boardSize.y)
-        self.applicationContext.drawBigText("Held", (255, 255, 255), innerArea.asRect())
+        self.applicationContext.drawBigText("Hold", (255, 255, 255), innerArea.asRect())
 
     def update(self, millisecondsSinceLastUpdate, aHeldPiece):
         self.heldPiece = aHeldPiece
