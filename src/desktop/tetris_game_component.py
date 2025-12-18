@@ -32,6 +32,8 @@ class TetrisGameComponent(DesktopComponent):
 
         self.linesCleared = 0
         self.score = 0
+        self.combo = -1
+        self.tetrisEventNotifier.attachComboBreakEvent(self.onComboBreak)
         self.tetrisEventNotifier.attachRowClearEvent(self.onRowClear)
         self.tetrisEventNotifier.attachDoubleRowClearEvent(self.onDoubleRowClear)
         self.tetrisEventNotifier.attachTripleRowClearEvent(self.onTripleRowClear)
@@ -82,21 +84,34 @@ class TetrisGameComponent(DesktopComponent):
     def currentLevel(self):
         return 1 + self.linesCleared // 10
 
+    def currentCombo(self):
+        return self.combo * 50 * self.currentLevel()
+
+    def onComboBreak(self):
+        self.combo = -1
+
+    def increaseCombo(self):
+        self.combo = self.combo + 1
+
     def onRowClear(self):
         self.linesCleared += 1
-        self.score += self.currentLevel() * 100
+        self.increaseCombo()
+        self.score += (self.currentLevel() * 100) + self.currentCombo()
 
     def onDoubleRowClear(self):
         self.linesCleared += 2
-        self.score += self.currentLevel() * 300
+        self.increaseCombo()
+        self.score += (self.currentLevel() * 300) + self.currentCombo()
 
     def onTripleRowClear(self):
         self.linesCleared += 3
-        self.score += self.currentLevel() * 500
+        self.increaseCombo()
+        self.score += (self.currentLevel() * 500) + self.currentCombo()
 
     def onQuadrupleRowClear(self):
         self.linesCleared += 4
-        self.score += self.currentLevel() * 800
+        self.increaseCombo()
+        self.score += (self.currentLevel() * 800) + self.currentCombo()
 
     def drawRect(self, aColor, aRectangle):
         self.applicationContext.drawRect(aColor, pygame.Rect(

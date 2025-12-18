@@ -243,3 +243,53 @@ class TestGameEvents:
         game.hardDrop()
 
         assert self.placedPiece
+
+    def test11_ComboBreakEventIsTriggered(self):
+        random = RandStub([1, 1, 4, 1, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 6, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.comboBreak  = False
+
+        def event():
+            self.comboBreak = True
+
+        eventNotifier.attachComboBreakEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.hardDrop()
+
+        game.hardDrop()
+
+        assert self.comboBreak
+
+    def test12_ComboBreakEventIsNotTriggeredIfALineWasCleared(self):
+        random = RandStub([1, 1, 4, 1, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 6, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        def event():
+            assert False
+
+        eventNotifier.attachComboBreakEvent(event)
+
+        game.hardDrop()

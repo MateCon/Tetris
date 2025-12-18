@@ -54,6 +54,8 @@ class Playfield:
             if isComplete(row):
                 completedRows.append(row)
 
+        if len(completedRows) == 0:
+            self.eventNotifier.notifyComboBreak()
         if len(completedRows) == 1:
             self.eventNotifier.notifyRowClear()
         if len(completedRows) == 2:
