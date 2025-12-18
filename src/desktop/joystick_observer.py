@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import sys
 
 
 class JoystickObserver:
@@ -6,33 +7,63 @@ class JoystickObserver:
         self.joystick = aJoystick
         self.applicationContext = anApplicationContext
         self.deadzone = 0.5
-        self.observers = [
-            self.createAxisObserver(0, self.isLeftOfDeadzone, "JOYSTICK_LEFT_STICK_LEFT"),
-            self.createAxisObserver(0, self.isRightOfDeadzone, "JOYSTICK_LEFT_STICK_RIGHT"),
-            self.createAxisObserver(1, self.isLeftOfDeadzone, "JOYSTICK_LEFT_STICK_UP"),
-            self.createAxisObserver(1, self.isRightOfDeadzone, "JOYSTICK_LEFT_STICK_DOWN"),
-            self.createAxisObserver(3, self.isLeftOfDeadzone, "JOYSTICK_RIGHT_STICK_LEFT"),
-            self.createAxisObserver(3, self.isRightOfDeadzone, "JOYSTICK_RIGHT_STICK_RIGHT"),
-            self.createAxisObserver(4, self.isLeftOfDeadzone, "JOYSTICK_RIGHT_STICK_UP"),
-            self.createAxisObserver(4, self.isRightOfDeadzone, "JOYSTICK_RIGHT_STICK_DOWN"),
-            self.createHatObserver(lambda x, _: x == -1, "JOYSTICK_HAT_LEFT"),
-            self.createHatObserver(lambda x, _: x == 1, "JOYSTICK_HAT_RIGHT"),
-            self.createHatObserver(lambda _, y: y == -1, "JOYSTICK_HAT_DOWN"),
-            self.createHatObserver(lambda _, y: y == 1, "JOYSTICK_HAT_UP"),
-            self.createButtonObserver(0, "JOYSTICK_CROSS"),
-            self.createButtonObserver(1, "JOYSTICK_CIRCLE"),
-            self.createButtonObserver(2, "JOYSTICK_TRIANGLE"),
-            self.createButtonObserver(3, "JOYSTICK_SQUARE"),
-            self.createButtonObserver(4, "JOYSTICK_LEFT_BUMPER"),
-            self.createButtonObserver(5, "JOYSTICK_RIGHT_BUMPER"),
-            self.createButtonObserver(6, "JOYSTICK_LEFT_TRIGGER"),
-            self.createButtonObserver(7, "JOYSTICK_RIGHT_TRIGGER"),
-            self.createButtonObserver(8, "JOYSTICK_SHARE"),
-            self.createButtonObserver(9, "JOYSTICK_PAUSE"),
-            self.createButtonObserver(10, "JOYSTICK_HOME"),
-            self.createButtonObserver(11, "JOYSTICK_LEFT_STICK_PRESSED"),
-            self.createButtonObserver(12, "JOYSTICK_RIGHT_STICK_PRESSED"),
-        ]
+
+        if sys.platform == "linux":
+            self.observers = [
+                self.createAxisObserver(0, self.isLeftOfDeadzone, "JOYSTICK_LEFT_STICK_LEFT"),
+                self.createAxisObserver(0, self.isRightOfDeadzone, "JOYSTICK_LEFT_STICK_RIGHT"),
+                self.createAxisObserver(1, self.isLeftOfDeadzone, "JOYSTICK_LEFT_STICK_UP"),
+                self.createAxisObserver(1, self.isRightOfDeadzone, "JOYSTICK_LEFT_STICK_DOWN"),
+                self.createAxisObserver(3, self.isLeftOfDeadzone, "JOYSTICK_RIGHT_STICK_LEFT"),
+                self.createAxisObserver(3, self.isRightOfDeadzone, "JOYSTICK_RIGHT_STICK_RIGHT"),
+                self.createAxisObserver(4, self.isLeftOfDeadzone, "JOYSTICK_RIGHT_STICK_UP"),
+                self.createAxisObserver(4, self.isRightOfDeadzone, "JOYSTICK_RIGHT_STICK_DOWN"),
+                self.createHatObserver(lambda x, _: x == -1, "JOYSTICK_HAT_LEFT"),
+                self.createHatObserver(lambda x, _: x == 1, "JOYSTICK_HAT_RIGHT"),
+                self.createHatObserver(lambda _, y: y == -1, "JOYSTICK_HAT_DOWN"),
+                self.createHatObserver(lambda _, y: y == 1, "JOYSTICK_HAT_UP"),
+                self.createButtonObserver(0, "JOYSTICK_CROSS"),
+                self.createButtonObserver(1, "JOYSTICK_CIRCLE"),
+                self.createButtonObserver(2, "JOYSTICK_TRIANGLE"),
+                self.createButtonObserver(3, "JOYSTICK_SQUARE"),
+                self.createButtonObserver(4, "JOYSTICK_LEFT_BUMPER"),
+                self.createButtonObserver(5, "JOYSTICK_RIGHT_BUMPER"),
+                self.createButtonObserver(6, "JOYSTICK_LEFT_TRIGGER"),
+                self.createButtonObserver(7, "JOYSTICK_RIGHT_TRIGGER"),
+                self.createButtonObserver(8, "JOYSTICK_SHARE"),
+                self.createButtonObserver(9, "JOYSTICK_PAUSE"),
+                self.createButtonObserver(10, "JOYSTICK_HOME"),
+                self.createButtonObserver(11, "JOYSTICK_LEFT_STICK_PRESSED"),
+                self.createButtonObserver(12, "JOYSTICK_RIGHT_STICK_PRESSED"),
+            ]
+        elif sys.platform == "win32":
+            self.observers = [
+                self.createAxisObserver(0, self.isLeftOfDeadzone, "JOYSTICK_LEFT_STICK_LEFT"),
+                self.createAxisObserver(0, self.isRightOfDeadzone, "JOYSTICK_LEFT_STICK_RIGHT"),
+                self.createAxisObserver(1, self.isLeftOfDeadzone, "JOYSTICK_LEFT_STICK_UP"),
+                self.createAxisObserver(1, self.isRightOfDeadzone, "JOYSTICK_LEFT_STICK_DOWN"),
+                self.createAxisObserver(2, self.isLeftOfDeadzone, "JOYSTICK_RIGHT_STICK_LEFT"),
+                self.createAxisObserver(2, self.isRightOfDeadzone, "JOYSTICK_RIGHT_STICK_RIGHT"),
+                self.createAxisObserver(3, self.isLeftOfDeadzone, "JOYSTICK_RIGHT_STICK_UP"),
+                self.createAxisObserver(3, self.isRightOfDeadzone, "JOYSTICK_RIGHT_STICK_DOWN"),
+                self.createButtonObserver(0, "JOYSTICK_CROSS"),
+                self.createButtonObserver(1, "JOYSTICK_CIRCLE"),
+                self.createButtonObserver(2, "JOYSTICK_SQUARE"),
+                self.createButtonObserver(3, "JOYSTICK_TRIANGLE"),
+                self.createButtonObserver(4, "JOYSTICK_SHARE"),
+                self.createButtonObserver(5, "JOYSTICK_HOME"),
+                self.createButtonObserver(6, "JOYSTICK_PAUSE"),
+                self.createButtonObserver(7, "JOYSTICK_LEFT_STICK_PRESSED"),
+                self.createButtonObserver(8, "JOYSTICK_RIGHT_STICK_PRESSED"),
+                self.createButtonObserver(9, "JOYSTICK_LEFT_BUMPER"),
+                self.createButtonObserver(10, "JOYSTICK_RIGHT_BUMPER"),
+                self.createButtonObserver(11, "JOYSTICK_HAT_UP"),
+                self.createButtonObserver(12, "JOYSTICK_HAT_DOWN"),
+                self.createButtonObserver(13, "JOYSTICK_HAT_LEFT"),
+                self.createButtonObserver(14, "JOYSTICK_HAT_RIGHT"),
+                self.createButtonObserver(15, "JOYSTICK_TOUCHPAD"),
+            ]
+
 
     def createAxisObserver(self, anAxis, aPressedCondition, aMessage):
         return JoystickAxisObserver(self.joystick, self.applicationContext, self.deadzone, anAxis, aPressedCondition, aMessage)
@@ -93,8 +124,9 @@ class JoystickHatObserver(JoystickInputObserver):
         self.pressedCondition = aPressedCondition
 
     def update(self):
-        x, y = self.joystick.get_hat(0)
-        super().updateWith(self.pressedCondition(x, y))
+        if self.joystick.get_numhats() == 1:
+            x, y = self.joystick.get_hat(0)
+            super().updateWith(self.pressedCondition(x, y))
 
 
 class JoystickButtonObserver(JoystickInputObserver):

@@ -65,10 +65,10 @@ class PlayPageComponent(DesktopComponent):
 
     def mapHomeToggle(self, aJoystick):
         instanceId = aJoystick.get_instance_id()
-        self.applicationContext.inputObserver.addKeydownObserver(self, "JOYSTICK_HOME", instanceId, lambda: self.toggleGameFrom(instanceId))
+        self.applicationContext.inputObserver.addKeydownObserver(self, "JOYSTICK_CROSS", instanceId, lambda: self.toggleGameFrom(instanceId))
 
     def unmapHomeToggle(self, anInstanceId):
-        self.applicationContext.inputObserver.removePair(anInstanceId, "JOYSTICK_HOME")
+        self.applicationContext.inputObserver.removePair(anInstanceId, "JOYSTICK_CROSS")
 
     def destroy(self):
         self.applicationContext.inputObserver.removeFrom(self)
