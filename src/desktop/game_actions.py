@@ -48,32 +48,30 @@ class GameActions(ABC):
 
 
 class RunningGameActions(GameActions):
-    def __init__(self, aGame, aLeftCommandRepeater, aRightCommandRepeater, aDropCommandRepeater):
+    def __init__(self, aGameComponent, aGame):
+        self.gameComponent = aGameComponent
         self.game = aGame
-        self.leftCommandRepeater = aLeftCommandRepeater
-        self.rightCommandRepeater = aRightCommandRepeater
-        self.dropCommandRepeater = aDropCommandRepeater
 
     def tick(self):
         self.game.tick()
 
     def startMovingLeft(self):
-        self.leftCommandRepeater.start()
+        self.gameComponent.leftCommandRepeater.start()
 
     def stopMovingLeft(self):
-        self.leftCommandRepeater.stop()
+        self.gameComponent.leftCommandRepeater.stop()
 
     def startMovingRight(self):
-        self.rightCommandRepeater.start()
+        self.gameComponent.rightCommandRepeater.start()
 
     def stopMovingRight(self):
-        self.rightCommandRepeater.stop()
+        self.gameComponent.rightCommandRepeater.stop()
 
     def startDropping(self):
-        self.dropCommandRepeater.start()
+        self.gameComponent.dropCommandRepeater.start()
 
     def stopDropping(self):
-        self.dropCommandRepeater.stop()
+        self.gameComponent.dropCommandRepeater.stop()
 
     def hardDrop(self):
         self.game.hardDrop()
@@ -88,18 +86,16 @@ class RunningGameActions(GameActions):
         self.game.hold()
 
     def togglePause(self):
-        return PausedGameActions(self.game, self.leftCommandRepeater, self.rightCommandRepeater, self.dropCommandRepeater)
+        return PausedGameActions(self.gameComponent, self.game)
 
     def isPaused(self):
         return False
 
 
 class PausedGameActions(GameActions):
-    def __init__(self, aGame, aLeftCommandRepeater, aRightCommandRepeater, aDropCommandRepeater):
+    def __init__(self, aGameComponent, aGame):
+        self.gameComponent = aGameComponent
         self.game = aGame
-        self.leftCommandRepeater = aLeftCommandRepeater
-        self.rightCommandRepeater = aRightCommandRepeater
-        self.dropCommandRepeater = aDropCommandRepeater
 
     def tick(self):
         pass
@@ -117,13 +113,13 @@ class PausedGameActions(GameActions):
         pass
 
     def startDropping(self):
-        pass
+        self.gameComponent.pauseMoveDown()
 
     def stopDropping(self):
         pass
 
     def hardDrop(self):
-        pass
+        self.gameComponent.pauseMoveUp()
 
     def rotateLeft(self):
         pass
@@ -135,7 +131,7 @@ class PausedGameActions(GameActions):
         pass
 
     def togglePause(self):
-        return RunningGameActions(self.game, self.leftCommandRepeater, self.rightCommandRepeater, self.dropCommandRepeater)
+        return RunningGameActions(self.gameComponent, self.game)
 
     def isPaused(self):
         return True

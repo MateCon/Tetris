@@ -9,6 +9,7 @@ class TetrisEventNotifier:
         self.quadrupleRowClear = EventNotifier()
         self.placedPiece = EventNotifier()
         self.comboBreak = EventNotifier()
+        self.lost = EventNotifier()
 
     def attachRowClearEvent(self, event):
         self.rowClear.attach(event)
@@ -45,3 +46,9 @@ class TetrisEventNotifier:
 
     def notifyComboBreak(self):
         self.comboBreak.notify()
+
+    def attachLostEvent(self, event):
+        self.lost.attach(event)
+
+    def notifyLost(self):
+        self.lost.notify()

@@ -1,6 +1,7 @@
 from pygame.joystick import Joystick
 from desktop.desktop_component import DesktopComponent
 from desktop.tetris_game_component import TetrisGameComponent
+from desktop.area import Area
 from model.tetris_event_notifier import TetrisEventNotifier
 from model.tetris_game import TetrisGame
 from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator
@@ -56,25 +57,25 @@ class PlayPageComponent(DesktopComponent):
         for joystick in self.applicationContext.joysticks.values():
             self.createGameComponentWithJoystick(joystick)
 
-        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_INSERT, 100, self.createGameComponentWithKeyboard)
-        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_DELETE, 100, self.deleteGameComponentWithKeyboard)
+        self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_SPACE, 100, self.createGameComponentWithKeyboard)
 
-        self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.mapHomeToggle)
+        self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.mapCreateGame)
         self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.deleteGameComponentWithJoystickId)
-        self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.unmapHomeToggle)
+        self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.unmapCreateGame)
 
-    def mapHomeToggle(self, aJoystick):
+    def mapCreateGame(self, aJoystick):
         instanceId = aJoystick.get_instance_id()
-        self.applicationContext.inputObserver.addKeydownObserver(self, "JOYSTICK_CROSS", instanceId, lambda: self.toggleGameFrom(instanceId))
+        self.applicationContext.inputObserver.addKeydownObserver(self, "JOYSTICK_CROSS", instanceId, lambda: self.createGameComponentWithJoystickId(instanceId))
 
-    def unmapHomeToggle(self, anInstanceId):
+    def unmapCreateGame(self, anInstanceId):
         self.applicationContext.inputObserver.removePair(anInstanceId, "JOYSTICK_CROSS")
 
     def destroy(self):
         self.applicationContext.inputObserver.removeFrom(self)
 
     def createGameComponentWithKeyboard(self):
-        self.createGameComponent(100, self.mapKeyboard)
+        if not 100 in self.gameComponents.keys():
+            self.createGameComponent(100, self.mapKeyboard)
 
     def deleteGameComponentWithKeyboard(self):
         if 100 in self.gameComponents.keys():
@@ -111,7 +112,9 @@ class PlayPageComponent(DesktopComponent):
             self.cellSize,
             tetrisEventNotifier,
             aKeybindMapper,
-            ColorScheme()
+            ColorScheme(),
+            lambda: self.restartGame(anInstanceId),
+            lambda: self.deleteGame(anInstanceId)
         )
         if not anInstanceId in self.gameComponents.keys():
             self.gameComponents[anInstanceId] = gameComponent
@@ -131,6 +134,7 @@ class PlayPageComponent(DesktopComponent):
         aGameComponent.mapKeydown(100, pygame.K_UP, aGameComponent.rotateRight)
         aGameComponent.mapKeydown(100, pygame.K_LSHIFT, aGameComponent.hold)
         aGameComponent.mapKeydown(100, pygame.K_ESCAPE, aGameComponent.togglePause)
+        aGameComponent.mapKeydown(100, pygame.K_RETURN, aGameComponent.pauseAccept)
 
     def createJoystickMapper(self, aDeviceId):
         def mapJoystick(aGameComponent):
@@ -164,19 +168,22 @@ class PlayPageComponent(DesktopComponent):
 
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_PAUSE", aGameComponent.togglePause)
             aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_TRIANGLE", lambda: self.restartGame(aDeviceId))
+            aGameComponent.mapKeydown(aDeviceId, "JOYSTICK_CROSS", aGameComponent.pauseAccept)
 
         return mapJoystick
 
     def restartGame(self, aDeviceId):
-        self.deleteGameComponentWithJoystickId(aDeviceId)
-        self.createGameComponentWithJoystickId(aDeviceId)
+        if aDeviceId == 100:
+            self.deleteGameComponentWithKeyboard()
+            self.createGameComponentWithKeyboard()
+        else:
+            self.deleteGameComponentWithJoystickId(aDeviceId)
+            self.createGameComponentWithJoystickId(aDeviceId)
 
-    def toggleGameFrom(self, aDeviceId):
+    def deleteGame(self, aDeviceId):
         if aDeviceId in self.gameComponents.keys():
             self.gameComponents[aDeviceId].destroy()
             del self.gameComponents[aDeviceId]
-        else:
-            self.createGameComponentWithJoystickId(aDeviceId)
 
     def draw(self, anArea):
         keysSet = self.gameComponents.keys()
@@ -184,6 +191,9 @@ class PlayPageComponent(DesktopComponent):
         for key in keysSet:
             keys.append(key)
         keys.sort()
+        if len(self.gameComponents) == 0:
+            self.applicationContext.drawText("TETRIS", (255, 255, 255), 60, Area(0, 0, 125, 20).centeredAt(anArea).shifted(0, -50).asRect())
+            self.applicationContext.drawText("Press space or X to start!", (255, 255, 255), 40, Area(0, 0, 450, 20).centeredAt(anArea).shifted(0, 20).asRect())
         if len(self.gameComponents) == 1:
             self.gameComponents[keys[0]].draw(anArea)
         if len(self.gameComponents) == 2:

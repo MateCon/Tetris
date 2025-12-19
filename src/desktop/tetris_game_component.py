@@ -5,10 +5,11 @@ from desktop.held_command_repeater import HeldCommandRepeater
 from desktop.next_piece_display_component import NextPieceDisplayComponent
 from desktop.held_piece_display_component import HeldPieceDisplayComponent
 from desktop.game_actions import RunningGameActions
+from desktop.pause_component import PauseComponent
 
 
 class TetrisGameComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper, aColorScheme):
+    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper, aColorScheme, aRestartMethod, aDeleteMethod):
         super().__init__(anApplicationContext)
         self.rows = anAmmountOfRows
         self.cols = anAmmountOfCols
@@ -26,7 +27,7 @@ class TetrisGameComponent(DesktopComponent):
         self.rightCommandRepeater = HeldCommandRepeater(self.game.moveRight, 167, 33)
         self.dropCommandRepeater = HeldCommandRepeater(self.game.softDrop, 50, 33)
 
-        self.gameActions = RunningGameActions(self.game, self.leftCommandRepeater, self.rightCommandRepeater, self.dropCommandRepeater)
+        self.gameActions = RunningGameActions(self, self.game)
         self.tetrisEventNotifier.attachPlacedPieceEvent(self.gameActions.stopDropping)
         aKeybindMapper(self)
 
@@ -38,6 +39,12 @@ class TetrisGameComponent(DesktopComponent):
         self.tetrisEventNotifier.attachDoubleRowClearEvent(self.onDoubleRowClear)
         self.tetrisEventNotifier.attachTripleRowClearEvent(self.onTripleRowClear)
         self.tetrisEventNotifier.attachQuadrupleRowClearEvent(self.onQuadrupleRowClear)
+
+        self.restartMethod = aRestartMethod
+        self.deleteMethod = aDeleteMethod
+        self.pauseComponent = PauseComponent(self.applicationContext, self, self.cellSize, self.restartMethod, self.deleteMethod)
+        self.tetrisEventNotifier.attachLostEvent(self.pauseComponent.focusRestart)
+        self.tetrisEventNotifier.attachLostEvent(self.togglePause)
 
     def tick(self):
         self.gameActions.tick()
@@ -76,10 +83,23 @@ class TetrisGameComponent(DesktopComponent):
         return self.game.getHeldPiece()
 
     def togglePause(self):
+        self.leftCommandRepeater.stop()
+        self.rightCommandRepeater.stop()
+        self.dropCommandRepeater.stop()
         self.gameActions = self.gameActions.togglePause()
 
     def isPaused(self):
         return self.gameActions.isPaused()
+
+    def pauseMoveDown(self):
+        self.pauseComponent.moveDown()
+
+    def pauseMoveUp(self):
+        self.pauseComponent.moveUp()
+
+    def pauseAccept(self):
+        if self.isPaused():
+            self.pauseComponent.accept()
 
     def currentLevel(self):
         return 1 + self.linesCleared // 10
@@ -179,11 +199,7 @@ class TetrisGameComponent(DesktopComponent):
         )
 
         if self.isPaused():
-            self.applicationContext.drawText(
-                "PAUSED",
-                (255, 255, 255), 38,
-                self.centeredArea(anArea).shifted(self.cellSize * 3, self.cellSize * 10).asRect()
-            )
+            self.pauseComponent.draw(self.areaWithoutVanishZone(anArea))
 
     def nextSixPieces(self):
         return self.game.getNextSix()

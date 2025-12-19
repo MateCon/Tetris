@@ -293,3 +293,21 @@ class TestGameEvents:
         eventNotifier.attachComboBreakEvent(event)
 
         game.hardDrop()
+
+
+    def test13_LostEventIsTriggered(self):
+        random = RandStub([4, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.lost = False
+
+        def event():
+            self.lost = True
+
+        eventNotifier.attachLostEvent(event)
+
+        game.hardDrop()
+
+        assert self.lost
+
