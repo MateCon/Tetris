@@ -52,11 +52,6 @@ class PlayPageComponent(DesktopComponent):
 
         self.gameComponents = {}
 
-        self.createGameComponentWithKeyboard()
-
-        for joystick in self.applicationContext.joysticks.values():
-            self.createGameComponentWithJoystick(joystick)
-
         self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_SPACE, 100, self.createGameComponentWithKeyboard)
 
         self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.mapCreateGame)

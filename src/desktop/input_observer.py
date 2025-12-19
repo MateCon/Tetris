@@ -6,7 +6,7 @@ class InputObserver:
     def notify(self, aKey, aDevice, aHandlerDict):
         keyDevicePair = (aKey, aDevice)
         if keyDevicePair in aHandlerDict:
-            for _, handler in aHandlerDict[keyDevicePair]:
+            for _, handler in aHandlerDict[keyDevicePair].copy():
                 handler()
 
     def addObserver(self, aSenderObject, aKey, aDevice, aHandler, aHandlerDict):
