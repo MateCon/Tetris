@@ -44,12 +44,9 @@ class TetrisGame:
         self.nextPiece = self.currentBag.next()
         self.canHoldPiece = True
 
-    def hasLost(self):
-        return self.currentPiece.anySatisfy(lambda point: self.playfield.pointIsInVanishingZone(point))
-
     def freezeCurrentPiece(self):
         self.playfield.addBlocks(self.currentPiece)
-        if self.hasLost():
+        if self.currentPiece.anySatisfy(lambda point: self.playfield.pointIsInVanishingZone(point)):
             self.eventNotifier.notifyLost()
             self.currentPiece = NoPiece()
         else:
@@ -79,7 +76,7 @@ class TetrisGame:
         self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.hardDrop, self.freezeCurrentPiece)
 
     def hold(self):
-        if not self.canHoldPiece:
+        if not self.canHoldPiece or isinstance(self.currentPiece, NoPiece):
             return
         self.currentPiece.resetPosition()
         self.currentPiece.resetRotation()

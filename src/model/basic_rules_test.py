@@ -615,3 +615,20 @@ class TestBasicRules:
             "..oo..",
             "..oo..",
         ]
+
+    def test42_CanNotHoldAfterGameIsLost(self):
+        random = RandStub([4, 4, 4, 4])
+        game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks)
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.hold()
+
+        print(game.asStringList())
+        assert game.asStringList() == [
+            "----------",
+            "------oo--",
+            "......oo..",
+        ]
