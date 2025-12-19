@@ -9,6 +9,8 @@ import pygame
 class DesktopApplicationRunner:
     def __init__(self):
         pygame.init()
+        pygame.display.set_caption("Tetris")
+        pygame.display.set_icon(pygame.image.load("assets/images/logo.png"))
         pygame.font.init()
         pygame.joystick.init()
         self.joysticks = {}
@@ -59,7 +61,7 @@ class DesktopApplicationRunner:
         self.page.update(self.timeSinceLastFrame)
 
     def run(self):
-        while True:
+        while self.applicationContext.isRunning:
             self.eventHandler()
             self.drawScreen()
             self.update()

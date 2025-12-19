@@ -7,6 +7,7 @@ class ApplicationContext:
         self.inputObserver = anInputObserver
         self.joysticks = aJoystickDictionary
         self.joystickLifecycleObserver = aJoystickLifecycleObserver
+        self.isRunning = True
 
     def drawRect(self, aColor, aRect):
         pygame.draw.rect(self.screen, aColor, aRect)
@@ -15,4 +16,7 @@ class ApplicationContext:
         font = pygame.font.Font("assets/fonts/charybdis.regular.ttf", aSize)
         surface = font.render(someContents, True, aColor)
         self.screen.blit(surface, aRect)
+
+    def exit(self):
+        self.isRunning = False
 

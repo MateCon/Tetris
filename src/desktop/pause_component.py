@@ -10,7 +10,9 @@ class PauseComponent(DesktopComponent):
         self.restartMethod = aRestartMethod
         self.deleteMethod = aDeleteMethod
         self.currentOptionIndex = 0
-        self.options = [("Resume", self.resume), ("Restart", self.restart), ("Exit", self.exit)]
+        self.options = [("Resume", self.resume), ("Restart", self.restart), ("Remove Device", self.removeDevice), ("Exit", self.exit)]
+        self.hasLost = False
+        self.gameComponent.tetrisEventNotifier.attachLostEvent(self.onLost)
 
     def accept(self):
         self.options[self.currentOptionIndex][1]()
@@ -21,8 +23,11 @@ class PauseComponent(DesktopComponent):
     def restart(self):
         self.restartMethod()
 
-    def exit(self):
+    def removeDevice(self):
         self.deleteMethod()
+
+    def exit(self):
+        self.applicationContext.exit()
 
     def moveDown(self):
         self.currentOptionIndex += 1
@@ -37,13 +42,19 @@ class PauseComponent(DesktopComponent):
             if text == "Restart":
                 self.currentOptionIndex = index
 
+    def onLost(self):
+        self.hasLost = True
+
     def draw(self, anArea):
         currentArea = anArea.copy().shifted(0, self.cellSize * 7)
         totalArea = currentArea
         currentArea.height = 40
-        textXOffset = anArea.width / 2 - 50
+        textXOffset = anArea.width / 2 - 65
+        title = "Paused"
+        if self.hasLost:
+            title = "LOST"
         self.applicationContext.drawRect((0, 0, 0), currentArea.asRect())
-        self.applicationContext.drawText("PAUSED", (255, 255, 255), 38, currentArea.shifted(textXOffset, 0).asRect())
+        self.applicationContext.drawText(title, (255, 255, 255), 38, currentArea.shifted(textXOffset, 0).asRect())
         currentArea = currentArea.shifted(0, 40)
         currentArea.height = 30
         for index, (text, action) in enumerate(self.options):
