@@ -45,6 +45,9 @@ class PauseComponent(DesktopComponent):
     def onLost(self):
         self.hasLost = True
 
+    def lost(self):
+        return self.hasLost
+
     def draw(self, anArea):
         currentArea = anArea.copy().shifted(0, self.cellSize * 7)
         totalArea = currentArea

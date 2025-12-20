@@ -7,6 +7,7 @@ from desktop.held_piece_display_component import HeldPieceDisplayComponent
 from desktop.game_actions import RunningGameActions
 from desktop.pause_component import PauseComponent
 from model.game_score import GameScore
+from model.time import Time
 
 
 class TetrisGameComponent(DesktopComponent):
@@ -37,8 +38,11 @@ class TetrisGameComponent(DesktopComponent):
         self.restartMethod = aRestartMethod
         self.deleteMethod = aDeleteMethod
         self.pauseComponent = PauseComponent(self.applicationContext, self, self.cellSize, self.restartMethod, self.deleteMethod)
+
         self.tetrisEventNotifier.attachLostEvent(self.pauseComponent.focusRestart)
         self.tetrisEventNotifier.attachLostEvent(self.togglePause)
+
+        self.time = Time.fromMilliseconds(0)
 
     def tick(self):
         self.gameActions.tick()
@@ -148,6 +152,11 @@ class TetrisGameComponent(DesktopComponent):
             (255, 255, 255), 22,
             self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 80)
         )
+        self.applicationContext.drawText(
+            f"Time: {self.time.asString()}",
+            (255, 255, 255), 22,
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 120)
+        )
 
         self.drawBoard(self.centeredArea(anArea))
         self.drawBorderAround(self.areaWithoutVanishZone(anArea))
@@ -188,6 +197,9 @@ class TetrisGameComponent(DesktopComponent):
 
         self.nextPieceDisplayComponent.update(millisecondsSinceLastUpdate, self.nextSixPieces())
         self.heldPieceDisplayComponent.update(millisecondsSinceLastUpdate, self.getHeldPiece())
+
+        if not self.isPaused() and not self.pauseComponent.lost():
+            self.time = self.time + Time.fromMilliseconds(millisecondsSinceLastUpdate)
 
     def destroy(self):
         self.inputObserver.removeFrom(self)
