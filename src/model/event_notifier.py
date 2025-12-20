@@ -1,4 +1,7 @@
-class EventNotifier:
+from abc import ABC, abstractmethod
+
+
+class EventNotifier(ABC):
     def __init__(self):
         self.observers = set()
 
@@ -7,9 +10,21 @@ class EventNotifier:
             raise RepeatedObserver
         self.observers.add(anObserver)
 
+    @abstractmethod
+    def notify(self, *args, **kwargs):
+        pass
+
+
+class EventNotifierWithNoArguments(EventNotifier):
     def notify(self):
         for observer in self.observers:
             observer()
+
+
+class EventNotifierWithOneArgument(EventNotifier):
+    def notify(self, anArgument):
+        for observer in self.observers:
+            observer(anArgument)
 
 
 class RepeatedObserver(Exception):

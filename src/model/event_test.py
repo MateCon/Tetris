@@ -294,7 +294,6 @@ class TestGameEvents:
 
         game.hardDrop()
 
-
     def test13_LostEventIsTriggered(self):
         random = RandStub([4, 1])
         eventNotifier = TetrisEventNotifier()
@@ -310,4 +309,49 @@ class TestGameEvents:
         game.hardDrop()
 
         assert self.lost
+
+    def test14_SoftDropEventIsTriggered(self):
+        random = RandStub([4, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.softDrop = False
+
+        def event():
+            self.softDrop = True
+
+        eventNotifier.attachSoftDropEvent(event)
+
+        game.softDrop()
+
+        assert self.softDrop
+
+    def test15_SoftDropEventIsNotTriggeredWithTick(self):
+        random = RandStub([4, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachSoftDropEvent(event)
+
+        game.tick()
+
+    def test16_HardDropEventIsTriggeredWithTheAmountOfBlocksItDrops(self):
+        random = RandStub([4, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.blocks = 0
+
+        def event(someBlocks):
+            self.blocks = someBlocks
+
+        eventNotifier.attachHardDropEvent(event)
+
+        game.hardDrop()
+
+        assert self.blocks == 4
+
 

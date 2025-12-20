@@ -80,3 +80,13 @@ class TestGameScore:
         self.eventNotifier.notifyRowClear()
 
         assert self.gameScore.score() == 1300
+
+    def test12_SoftDropAlwaysGiveOnePoint(self):
+        self.eventNotifier.notifySoftDrop()
+
+        assert self.gameScore.score() == 1
+
+    def test13_HardDropGivesTwoPointsPerBlockDropped(self):
+        self.eventNotifier.notifyHardDrop(5)
+
+        assert self.gameScore.score() == 10

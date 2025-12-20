@@ -4,8 +4,11 @@ class GameScore:
         self.linesCleared = 0
         self.combo = 0
 
+        def addScore(aScore):
+            self.value += aScore
+
         def clearLines(aNumberOfLines, aScore):
-            self.value += (aScore + self.combo * 50) * self.level()
+            addScore((aScore + self.combo * 50) * self.level())
             self.linesCleared += aNumberOfLines
             self.combo += 1
 
@@ -17,6 +20,9 @@ class GameScore:
         anEventNotifier.attachTripleRowClearEvent(lambda: clearLines(3, 500))
         anEventNotifier.attachQuadrupleRowClearEvent(lambda: clearLines(4, 800))
         anEventNotifier.attachComboBreakEvent(lambda: resetCombo())
+
+        anEventNotifier.attachSoftDropEvent(lambda: addScore(1))
+        anEventNotifier.attachHardDropEvent(lambda blocksDropped: addScore(2 * blocksDropped))
 
     def lines(self):
         return self.linesCleared

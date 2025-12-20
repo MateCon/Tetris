@@ -14,9 +14,6 @@ class Time:
     def fromMilliseconds(someMilliseconds):
         return Time(someMilliseconds, 0, 0, 0, 0)
 
-    def remainder(self, aDividend, aDivisor):
-        return aDividend % aDivisor
-
     def getMilliseconds(self):
         return self.milliseconds
 

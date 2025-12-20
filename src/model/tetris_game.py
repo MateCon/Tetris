@@ -55,7 +55,7 @@ class TetrisGame:
         self.eventNotifier.notifyPlacedPiece()
 
     def tick(self):
-        self.softDrop()
+        self.currentPiece.moveIfCantMove(Point(0, -1), self.freezeCurrentPiece)
 
     def moveRight(self):
         self.currentPiece.move(Point(1, 0))
@@ -70,10 +70,16 @@ class TetrisGame:
         self.currentPiece.rotateLeft()
 
     def softDrop(self):
-        self.currentPiece.moveIfCantMove(Point(0, -1), self.freezeCurrentPiece)
+        self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.eventNotifier.notifySoftDrop, self.freezeCurrentPiece)
 
     def hardDrop(self):
-        self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.hardDrop, self.freezeCurrentPiece)
+        self.blocksInLastHardDrop = -1
+        self.hardDropRecursively()
+        self.eventNotifier.notifyHardDrop(self.blocksInLastHardDrop)
+
+    def hardDropRecursively(self):
+        self.blocksInLastHardDrop += 1
+        self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.hardDropRecursively, self.freezeCurrentPiece)
 
     def hold(self):
         if not self.canHoldPiece or isinstance(self.currentPiece, NoPiece):

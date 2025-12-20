@@ -1,15 +1,17 @@
-from model.event_notifier import EventNotifier
+from model.event_notifier import EventNotifierWithNoArguments, EventNotifierWithOneArgument
 
 
 class TetrisEventNotifier:
     def __init__(self):
-        self.rowClear = EventNotifier()
-        self.doubleRowClear = EventNotifier()
-        self.tripleRowClear = EventNotifier()
-        self.quadrupleRowClear = EventNotifier()
-        self.placedPiece = EventNotifier()
-        self.comboBreak = EventNotifier()
-        self.lost = EventNotifier()
+        self.rowClear = EventNotifierWithNoArguments()
+        self.doubleRowClear = EventNotifierWithNoArguments()
+        self.tripleRowClear = EventNotifierWithNoArguments()
+        self.quadrupleRowClear = EventNotifierWithNoArguments()
+        self.placedPiece = EventNotifierWithNoArguments()
+        self.comboBreak = EventNotifierWithNoArguments()
+        self.lost = EventNotifierWithNoArguments()
+        self.softDrop = EventNotifierWithNoArguments()
+        self.hardDrop = EventNotifierWithOneArgument()
 
     def attachRowClearEvent(self, event):
         self.rowClear.attach(event)
@@ -52,3 +54,15 @@ class TetrisEventNotifier:
 
     def notifyLost(self):
         self.lost.notify()
+
+    def attachSoftDropEvent(self, event):
+        self.softDrop.attach(event)
+
+    def notifySoftDrop(self):
+        self.softDrop.notify()
+
+    def attachHardDropEvent(self, event):
+        self.hardDrop.attach(event)
+
+    def notifyHardDrop(self, someBlocks):
+        self.hardDrop.notify(someBlocks)
