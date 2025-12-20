@@ -9,13 +9,13 @@ class ApplicationContext:
         self.joystickLifecycleObserver = aJoystickLifecycleObserver
         self.isRunning = True
 
-    def drawRect(self, aColor, aRect):
-        pygame.draw.rect(self.screen, aColor, aRect)
+    def drawArea(self, aColor, anArea):
+        pygame.draw.rect(self.screen, aColor, anArea.asRect())
 
-    def drawText(self, someContents, aColor, aSize, aRect):
+    def drawText(self, someContents, aColor, aSize, anArea):
         font = pygame.font.Font("assets/fonts/charybdis.regular.ttf", aSize)
         surface = font.render(someContents, True, aColor)
-        self.screen.blit(surface, aRect)
+        self.screen.blit(surface, anArea.asRect())
 
     def exit(self):
         self.isRunning = False

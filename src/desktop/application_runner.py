@@ -54,9 +54,6 @@ class DesktopApplicationRunner:
         self.applicationContext.screen.fill("black")
         self.page.draw(Area(0, 0, pygame.display.get_window_size()[0], pygame.display.get_window_size()[1]))
 
-    def drawRect(self, aColor, aRectangle):
-        pygame.draw.rect(self.applicationContext.screen, aColor, aRectangle)
-
     def update(self):
         self.page.update(self.timeSinceLastFrame)
 

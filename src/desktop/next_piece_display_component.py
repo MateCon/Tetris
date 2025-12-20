@@ -28,9 +28,9 @@ class NextPieceDisplayComponent(DesktopComponent):
             board = piece.asStringList()
             for y in range(3):
                 for x in range(4):
-                    self.applicationContext.drawRect(
+                    self.applicationContext.drawArea(
                         self.cellColor(board[y][x].lower()),
-                        pygame.Rect(
+                        Area(
                             currentArea.x + self.cellSize * x,
                             currentArea.y + self.cellSize * y,
                             self.cellSize,
@@ -38,7 +38,7 @@ class NextPieceDisplayComponent(DesktopComponent):
                         )
                 )
             currentArea = currentArea.shifted(0, boardSize.y)
-        self.applicationContext.drawText("Next", (255, 255, 255), 22, innerArea.asRect())
+        self.applicationContext.drawText("Next", (255, 255, 255), 22, innerArea)
 
     def update(self, millisecondsSinceLastUpdate, theNextSixPieces):
         self.nextSixPieces = theNextSixPieces

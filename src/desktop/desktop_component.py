@@ -18,9 +18,9 @@ class DesktopComponent(ABC):
         pass
 
     def drawBorder(self, anArea) -> Area:
-        self.applicationContext.drawRect(self.borderColor, anArea.asRect())
+        self.applicationContext.drawArea(self.borderColor, anArea)
         newArea = anArea.withPadding(self.borderWidth, self.borderWidth)
-        self.applicationContext.drawRect(self.backgroundColor, newArea.asRect())
+        self.applicationContext.drawArea(self.backgroundColor, newArea)
         return newArea
 
     def drawBorderAround(self, anArea):
@@ -29,7 +29,7 @@ class DesktopComponent(ABC):
         rightArea = Area(newArea.x + newArea.width - self.borderWidth, newArea.y, self.borderWidth, newArea.height)
         topArea = Area(newArea.x, newArea.y, newArea.width, self.borderWidth)
         bottomArea = Area(newArea.x, newArea.y + newArea.height - self.borderWidth, newArea.width, self.borderWidth)
-        self.applicationContext.drawRect(self.borderColor, leftArea.asRect())
-        self.applicationContext.drawRect(self.borderColor, rightArea.asRect())
-        self.applicationContext.drawRect(self.borderColor, topArea.asRect())
-        self.applicationContext.drawRect(self.borderColor, bottomArea.asRect())
+        self.applicationContext.drawArea(self.borderColor, leftArea)
+        self.applicationContext.drawArea(self.borderColor, rightArea)
+        self.applicationContext.drawArea(self.borderColor, topArea)
+        self.applicationContext.drawArea(self.borderColor, bottomArea)

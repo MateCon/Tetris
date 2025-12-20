@@ -53,8 +53,8 @@ class PauseComponent(DesktopComponent):
         title = "Paused"
         if self.hasLost:
             title = "LOST"
-        self.applicationContext.drawRect((0, 0, 0), currentArea.asRect())
-        self.applicationContext.drawText(title, (255, 255, 255), 38, currentArea.shifted(textXOffset, 0).asRect())
+        self.applicationContext.drawArea((0, 0, 0), currentArea)
+        self.applicationContext.drawText(title, (255, 255, 255), 38, currentArea.shifted(textXOffset, 0))
         currentArea = currentArea.shifted(0, 40)
         currentArea.height = 30
         for index, (text, action) in enumerate(self.options):
@@ -64,8 +64,8 @@ class PauseComponent(DesktopComponent):
             else:
                 textColor = (255, 255, 255)
                 rectColor = (0, 0, 0)
-            self.applicationContext.drawRect(rectColor, currentArea.asRect())
-            self.applicationContext.drawText(text, textColor, 24, currentArea.shifted(textXOffset, 0).asRect())
+            self.applicationContext.drawArea(rectColor, currentArea)
+            self.applicationContext.drawText(text, textColor, 24, currentArea.shifted(textXOffset, 0))
             currentArea = currentArea.shifted(0, 30)
         totalArea.height = currentArea.y - totalArea.y
         self.backgroundColor = (0, 0, 0)

@@ -29,9 +29,9 @@ class HeldPieceDisplayComponent(DesktopComponent):
             board = self.heldPiece.asStringList()
             for y in range(3):
                 for x in range(4):
-                    self.applicationContext.drawRect(
+                    self.applicationContext.drawArea(
                         self.cellColor(board[y][x].lower()),
-                        pygame.Rect(
+                        Area(
                             currentArea.x + self.cellSize * x,
                             currentArea.y + self.cellSize * y,
                             self.cellSize,
@@ -39,7 +39,7 @@ class HeldPieceDisplayComponent(DesktopComponent):
                         )
                 )
         currentArea = currentArea.shifted(0, boardSize.y)
-        self.applicationContext.drawText("Hold", (255, 255, 255), 22, innerArea.asRect())
+        self.applicationContext.drawText("Hold", (255, 255, 255), 22, innerArea)
 
     def update(self, millisecondsSinceLastUpdate, aHeldPiece):
         self.heldPiece = aHeldPiece

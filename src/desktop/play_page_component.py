@@ -187,8 +187,8 @@ class PlayPageComponent(DesktopComponent):
             keys.append(key)
         keys.sort()
         if len(self.gameComponents) == 0:
-            self.applicationContext.drawText("TETRIS", (255, 255, 255), 60, Area(0, 0, 125, 20).centeredAt(anArea).shifted(0, -50).asRect())
-            self.applicationContext.drawText("Press space or X to start!", (255, 255, 255), 40, Area(0, 0, 450, 20).centeredAt(anArea).shifted(0, 20).asRect())
+            self.applicationContext.drawText("TETRIS", (255, 255, 255), 60, Area(0, 0, 125, 20).centeredAt(anArea).shifted(0, -50))
+            self.applicationContext.drawText("Press space or X to start!", (255, 255, 255), 40, Area(0, 0, 450, 20).centeredAt(anArea).shifted(0, 20))
         if len(self.gameComponents) == 1:
             self.gameComponents[keys[0]].draw(anArea)
         if len(self.gameComponents) == 2:

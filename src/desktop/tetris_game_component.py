@@ -95,11 +95,11 @@ class TetrisGameComponent(DesktopComponent):
         if self.isPaused():
             self.pauseComponent.accept()
 
-    def drawRect(self, aColor, aRectangle):
-        self.applicationContext.drawRect(aColor, pygame.Rect(
-            aRectangle.x + self.borderWidth,
-            aRectangle.y + self.borderWidth, aRectangle.width,
-            aRectangle.height
+    def drawArea(self, aColor, anArea):
+        self.applicationContext.drawArea(aColor, Area(
+            anArea.x + self.borderWidth,
+            anArea.y + self.borderWidth, anArea.width,
+            anArea.height
         ))
 
     def activeCharacter(self):
@@ -112,9 +112,9 @@ class TetrisGameComponent(DesktopComponent):
         board = self.game.asStringListWithGhostPiece()
         for y in range(self.rows + 2):
             for x in range(self.cols):
-                self.applicationContext.drawRect(
+                self.applicationContext.drawArea(
                     self.cellColor(board[y][x].lower()),
-                    pygame.Rect(anArea.x + self.cellSize * x, anArea.y + self.cellSize * y, self.cellSize, self.cellSize)
+                    Area(anArea.x + self.cellSize * x, anArea.y + self.cellSize * y, self.cellSize, self.cellSize)
                 )
 
     def area(self):
@@ -136,17 +136,17 @@ class TetrisGameComponent(DesktopComponent):
         self.applicationContext.drawText(
             f"Level {self.scoreTracker.level()}",
             (255, 255, 255), 22,
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3)
         )
         self.applicationContext.drawText(
             f"Lines cleared: {self.scoreTracker.lines()}",
             (255, 255, 255), 22,
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 40).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 40)
         )
         self.applicationContext.drawText(
             f"Score: {self.scoreTracker.score()}",
             (255, 255, 255), 22,
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 80).asRect()
+            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 80)
         )
 
         self.drawBoard(self.centeredArea(anArea))
