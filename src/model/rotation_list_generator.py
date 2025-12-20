@@ -86,3 +86,60 @@ class SegaRotationListGenerator:
         rotationList = self.nintendoRotationListGenerator.createTRotationList()
         rotationList.shiftRotation(2, Point(0, -1))
         return rotationList
+
+
+class SuperRotationListGenerator:
+    def __init__(self):
+        self.segaRotationListGenerator = SegaRotationListGenerator()
+
+    def createIRotationList(self):
+        previousRotations = self.segaRotationListGenerator.createIRotationList()
+
+        newRotations = RotationList([
+            PieceShape([Point(0, 1), Point(1, 1), Point(2, 1), Point(3, 1)]),
+            PieceShape([Point(1, 0), Point(1, 1), Point(1, 2), Point(1, 3)]),
+        ])
+        return previousRotations + newRotations
+
+    def createJRotationList(self):
+        return RotationList([
+            PieceShape([Point(0, 2), Point(0, 1), Point(1, 1), Point(2, 1)]),
+            PieceShape([Point(1, 0), Point(1, 1), Point(1, 2), Point(2, 2)]),
+            PieceShape([Point(0, 1), Point(1, 1), Point(2, 1), Point(2, 0)]),
+            PieceShape([Point(0, 0), Point(1, 0), Point(1, 1), Point(1, 2)]),
+        ])
+
+    def createLRotationList(self):
+        return RotationList([
+            PieceShape([Point(2, 2), Point(0, 1), Point(1, 1), Point(2, 1)]),
+            PieceShape([Point(1, 0), Point(1, 1), Point(1, 2), Point(2, 0)]),
+            PieceShape([Point(0, 1), Point(1, 1), Point(2, 1), Point(0, 0)]),
+            PieceShape([Point(0, 2), Point(1, 0), Point(1, 1), Point(1, 2)]),
+        ])
+
+    def createORotationList(self):
+        return self.segaRotationListGenerator.createORotationList()
+
+    def createSRotationList(self):
+        return RotationList([
+            PieceShape([Point(0, 1), Point(1, 1), Point(1, 2), Point(2, 2)]),
+            PieceShape([Point(2, 0), Point(2, 1), Point(1, 1), Point(1, 2)]),
+            PieceShape([Point(0, 0), Point(1, 0), Point(1, 1), Point(2, 1)]),
+            PieceShape([Point(1, 0), Point(1, 1), Point(0, 1), Point(0, 2)]),
+        ])
+
+    def createZRotationList(self):
+        return RotationList([
+            PieceShape([Point(0, 2), Point(1, 1), Point(1, 2), Point(2, 1)]),
+            PieceShape([Point(1, 0), Point(2, 1), Point(1, 1), Point(2, 2)]),
+            PieceShape([Point(0, 1), Point(1, 0), Point(1, 1), Point(2, 0)]),
+            PieceShape([Point(0, 0), Point(1, 1), Point(0, 1), Point(1, 2)]),
+        ])
+
+    def createTRotationList(self):
+        return RotationList([
+            PieceShape([Point(0, 1), Point(1, 1), Point(2, 1), Point(1, 2)]),
+            PieceShape([Point(1, 0), Point(1, 1), Point(1, 2), Point(2, 1)]),
+            PieceShape([Point(0, 1), Point(1, 1), Point(2, 1), Point(1, 0)]),
+            PieceShape([Point(1, 0), Point(1, 1), Point(1, 2), Point(0, 1)]),
+        ])

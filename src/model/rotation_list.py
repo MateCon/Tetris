@@ -32,3 +32,6 @@ class RotationList:
 
     def reset(self):
         self.currentRotatationIndex = 0
+
+    def __add__(self, anotherRotationList):
+        return RotationList(self.pieceShapes + anotherRotationList.pieceShapes)

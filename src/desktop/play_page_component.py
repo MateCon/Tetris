@@ -4,7 +4,7 @@ from desktop.tetris_game_component import TetrisGameComponent
 from desktop.area import Area
 from model.tetris_event_notifier import TetrisEventNotifier
 from model.tetris_game import TetrisGame
-from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator
+from model.rotation_list_generator import SuperRotationListGenerator
 from model.kicks import ARSKicks
 from model.rand import Rand
 import pygame
@@ -94,7 +94,7 @@ class PlayPageComponent(DesktopComponent):
             self.cols,
             self.rows,
             Rand(),
-            SegaRotationListGenerator,
+            SuperRotationListGenerator,
             ARSKicks,
             tetrisEventNotifier
         )

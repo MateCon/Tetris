@@ -1,5 +1,5 @@
 from model.tetris_game import TetrisGame
-from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator
+from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator, SuperRotationListGenerator
 from model.rand import RandStub
 from model.kicks import NoKicks
 
@@ -525,4 +525,238 @@ class TestSegaRotationSystem:
             "..........",
             "..........",
             "..........",
+        ]
+
+
+class TestSegaRotationSystem:
+    def test01_IPiece(self):
+        random = RandStub([1])
+        game = TetrisGame(4, 2, random, SuperRotationListGenerator, NoKicks)
+
+        game.tick()
+        game.tick()
+
+        assert game.asStringList() == [
+            "----",
+            "IIII",
+            "....",
+            "....",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "--I-",
+            "--I-",
+            "..I.",
+            "..I.",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "----",
+            "----",
+            "IIII",
+            "....",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-I--",
+            "-I--",
+            ".I..",
+            ".I..",
+        ]
+
+    def test02_JPiece(self):
+        random = RandStub([2])
+        game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
+
+        game.tick()
+
+        assert game.asStringList() == [
+            "J--",
+            "JJJ",
+            "...",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-JJ",
+            "-J-",
+            ".J.",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "---",
+            "JJJ",
+            "..J",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-J-",
+            "-J-",
+            "JJ.",
+        ]
+
+    def test03_LPiece(self):
+        random = RandStub([3])
+        game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
+
+        game.tick()
+
+        assert game.asStringList() == [
+            "--L",
+            "LLL",
+            "...",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-L-",
+            "-L-",
+            ".LL",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "---",
+            "LLL",
+            "L..",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "LL-",
+            "-L-",
+            ".L.",
+        ]
+
+    def test04_OPiece(self):
+        random = RandStub([4])
+        game = TetrisGame(4, 2, random, SuperRotationListGenerator, NoKicks)
+
+        assert game.asStringList() == [
+            "-OO-",
+            "-OO-",
+            "....",
+            "....",
+        ]
+
+    def test05_LPiece(self):
+        random = RandStub([5])
+        game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
+
+        game.tick()
+
+        assert game.asStringList() == [
+            "-SS",
+            "SS-",
+            "...",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-S-",
+            "-SS",
+            "..S",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "---",
+            "-SS",
+            "SS.",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "S--",
+            "SS-",
+            ".S.",
+        ]
+
+    def test06_ZPiece(self):
+        random = RandStub([6])
+        game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
+
+        game.tick()
+
+        assert game.asStringList() == [
+            "ZZ-",
+            "-ZZ",
+            "...",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "--Z",
+            "-ZZ",
+            ".Z.",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "---",
+            "ZZ-",
+            ".ZZ",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-Z-",
+            "ZZ-",
+            "Z..",
+        ]
+
+    def test07_TPiece(self):
+        random = RandStub([7])
+        game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
+
+        game.tick()
+
+        assert game.asStringList() == [
+            "-T-",
+            "TTT",
+            "...",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-T-",
+            "-TT",
+            ".T.",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "---",
+            "TTT",
+            ".T.",
+        ]
+
+        game.rotateRight()
+
+        assert game.asStringList() == [
+            "-T-",
+            "TT-",
+            ".T.",
         ]
