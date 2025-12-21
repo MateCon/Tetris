@@ -1,7 +1,14 @@
+from model.point import Point
+
+
 class RotationList:
     def __init__(self, aListOfPieceShapes):
         self.pieceShapes = aListOfPieceShapes
         self.currentRotatationIndex = 0
+
+        if self.pieceShapes[0].anySatisfy(lambda offset: offset.y == 2):
+            for i in range(len(self.pieceShapes)):
+                self.pieceShapes[i] = self.pieceShapes[i].shifted(Point(0, -1))
 
     def currentShape(self):
         return self.pieceShapes[self.currentRotatationIndex]

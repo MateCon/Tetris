@@ -534,7 +534,6 @@ class TestSegaRotationSystem:
         game = TetrisGame(4, 2, random, SuperRotationListGenerator, NoKicks)
 
         game.tick()
-        game.tick()
 
         assert game.asStringList() == [
             "----",
@@ -574,8 +573,6 @@ class TestSegaRotationSystem:
         random = RandStub([2])
         game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
 
-        game.tick()
-
         assert game.asStringList() == [
             "J--",
             "JJJ",
@@ -609,8 +606,6 @@ class TestSegaRotationSystem:
     def test03_LPiece(self):
         random = RandStub([3])
         game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
-
-        game.tick()
 
         assert game.asStringList() == [
             "--L",
@@ -657,8 +652,6 @@ class TestSegaRotationSystem:
         random = RandStub([5])
         game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
 
-        game.tick()
-
         assert game.asStringList() == [
             "-SS",
             "SS-",
@@ -693,8 +686,6 @@ class TestSegaRotationSystem:
         random = RandStub([6])
         game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
 
-        game.tick()
-
         assert game.asStringList() == [
             "ZZ-",
             "-ZZ",
@@ -728,8 +719,6 @@ class TestSegaRotationSystem:
     def test07_TPiece(self):
         random = RandStub([7])
         game = TetrisGame(3, 1, random, SuperRotationListGenerator, NoKicks)
-
-        game.tick()
 
         assert game.asStringList() == [
             "-T-",
