@@ -90,3 +90,87 @@ class TestGameScore:
         self.eventNotifier.notifyHardDrop(5)
 
         assert self.gameScore.score() == 10
+
+    def test14_TSpinWithNoRowClear(self):
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyPlacedPiece()
+
+        assert self.gameScore.score() == 400
+
+    def test15_TSpinDoesNotApplyBeforeAPlacedPiece(self):
+        self.eventNotifier.notifyTSpin()
+
+        assert self.gameScore.score() == 0
+
+    def test16_TSpinWithRowClear(self):
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyRowClear()
+
+        assert self.gameScore.score() == 800
+
+    def test17_TSpinWithDoubleRowClear(self):
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyDoubleRowClear()
+
+        assert self.gameScore.score() == 1200
+
+    def test18_TSpinWithTripleRowClear(self):
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyTripleRowClear()
+
+        assert self.gameScore.score() == 1600
+
+    def test19_SpinsAreAffectedByMultipliers(self):
+        for _ in range(10):
+            self.eventNotifier.notifyRowClear()
+            self.eventNotifier.notifyComboBreak()
+
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyTripleRowClear()
+
+        assert self.gameScore.score() == 1000 + 1600 * 2
+
+    def test20_MiniTSpinWithNoRowClear(self):
+        self.eventNotifier.notifyMiniTSpin()
+        self.eventNotifier.notifyPlacedPiece()
+
+        assert self.gameScore.score() == 100
+
+    def test21_MiniTSpinWithRowClear(self):
+        self.eventNotifier.notifyMiniTSpin()
+        self.eventNotifier.notifyRowClear()
+
+        assert self.gameScore.score() == 200
+
+    def test22_MiniTSpinWithDoubleRowClear(self):
+        self.eventNotifier.notifyMiniTSpin()
+        self.eventNotifier.notifyDoubleRowClear()
+
+        assert self.gameScore.score() == 400
+
+    def test23_IfTSpinWasTheLastSpinThenTSpinIsApplied(self):
+        self.eventNotifier.notifyMiniTSpin()
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyPlacedPiece()
+
+        assert self.gameScore.score() == 400
+
+    def test24_IfMiniTSpinWasTheLastSpinThenMiniTSpinIsApplied(self):
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyMiniTSpin()
+        self.eventNotifier.notifyPlacedPiece()
+
+        assert self.gameScore.score() == 100
+
+    def test25_SpinsOnlyWorkForTheInmediatePiecePlacement(self):
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyPlacedPiece()
+        self.eventNotifier.notifyPlacedPiece()
+
+        assert self.gameScore.score() == 400
+
+    def test26_CombosDoNotStackForPlacedPieces(self):
+        self.eventNotifier.notifyPlacedPiece()
+        self.eventNotifier.notifyPlacedPiece()
+
+        assert self.gameScore.score() == 0

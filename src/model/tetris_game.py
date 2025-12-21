@@ -32,6 +32,8 @@ class TetrisGame:
         self.eventNotifier = anEventNotifier
         self.pieceHeld = NoPiece()
         self.canHoldPiece = True
+        self.lastActionWasATSpin = False
+        self.lastActionWasAMiniTSpin = False
 
     def goToNextBag(self):
         self.currentBag = self.nextBag
@@ -43,6 +45,8 @@ class TetrisGame:
             self.goToNextBag()
         self.nextPiece = self.currentBag.next()
         self.canHoldPiece = True
+        self.lastActionWasATSpin = False
+        self.lastActionWasAMiniTSpin = False
 
     def freezeCurrentPiece(self):
         self.playfield.addBlocks(self.currentPiece)
@@ -50,8 +54,12 @@ class TetrisGame:
             self.eventNotifier.notifyLost()
             self.currentPiece = NoPiece()
         else:
-            self.goToNextPiece()
+            if self.lastActionWasATSpin:
+                self.eventNotifier.notifyTSpin()
+            if self.lastActionWasAMiniTSpin:
+                self.eventNotifier.notifyMiniTSpin()
             self.checkForClearedLines()
+            self.goToNextPiece()
         self.eventNotifier.notifyPlacedPiece()
 
     def tick(self):
@@ -65,9 +73,31 @@ class TetrisGame:
 
     def rotateRight(self):
         self.currentPiece.rotateRight()
+        self.detectTSpin()
 
     def rotateLeft(self):
         self.currentPiece.rotateLeft()
+        self.detectTSpin()
+
+    def detectTSpin(self):
+        if self.activeCharacter() != "T":
+            return
+
+        cornersOccupied = 0
+        for corner in self.currentPiece.cornersForTSpin():
+            if self.playfield.hasBlockIn(corner) or not self.playfield.pointIsInPlayfield(corner):
+                cornersOccupied += 1
+
+        frontCornersOccupied = 0
+        for corner in self.currentPiece.frontCornersForTSpin():
+            if self.playfield.hasBlockIn(corner) or not self.playfield.pointIsInPlayfield(corner):
+                frontCornersOccupied += 1
+
+        if cornersOccupied == 3:
+            if frontCornersOccupied == 2:
+                self.lastActionWasATSpin = True
+            else:
+                self.lastActionWasAMiniTSpin = True
 
     def softDrop(self):
         self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.eventNotifier.notifySoftDrop, self.freezeCurrentPiece)

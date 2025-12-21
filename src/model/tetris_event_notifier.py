@@ -12,6 +12,8 @@ class TetrisEventNotifier:
         self.lost = EventNotifierWithNoArguments()
         self.softDrop = EventNotifierWithNoArguments()
         self.hardDrop = EventNotifierWithOneArgument()
+        self.tSpin = EventNotifierWithNoArguments()
+        self.miniTSpin = EventNotifierWithNoArguments()
 
     def attachRowClearEvent(self, event):
         self.rowClear.attach(event)
@@ -66,3 +68,15 @@ class TetrisEventNotifier:
 
     def notifyHardDrop(self, someBlocks):
         self.hardDrop.notify(someBlocks)
+
+    def attachTSpinEvent(self, event):
+        self.tSpin.attach(event)
+
+    def notifyTSpin(self):
+        self.tSpin.notify()
+
+    def attachMiniTSpinEvent(self, event):
+        self.miniTSpin.attach(event)
+
+    def notifyMiniTSpin(self):
+        self.miniTSpin.notify()

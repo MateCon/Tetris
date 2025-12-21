@@ -1,9 +1,9 @@
 from model.tetris_event_notifier import TetrisEventNotifier
 from model.event_notifier import RepeatedObserver
 from model.tetris_game import TetrisGame
-from model.rotation_list_generator import NintendoRotationListGenerator
+from model.rotation_list_generator import NintendoRotationListGenerator, SuperRotationListGenerator
 from model.rand import RandStub
-from model.kicks import NoKicks
+from model.kicks import NoKicks, SRSKicks
 import pytest
 
 
@@ -354,4 +354,288 @@ class TestGameEvents:
 
         assert self.blocks == 4
 
+    def test17_TSpinEventIsNotTriggeredUntilThePieceIsFrozen(self):
+        random = RandStub([7, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
 
+        def event():
+            assert False
+
+        eventNotifier.attachTSpinEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.hardDrop()
+
+        game.rotateLeft()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateLeft()
+
+    def test18_TSpinEventIsTriggeredWhenThreeCornersAreOccupied(self):
+        random = RandStub([7, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        self.tspin = False
+
+        def event():
+            self.tspin = True
+
+        eventNotifier.attachTSpinEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.hardDrop()
+
+        game.rotateLeft()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateLeft()
+        game.tick()
+
+        assert self.tspin
+
+    def test19_TSpinEventIsNotTriggeredForNonTPieces(self):
+        random = RandStub([4])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachTSpinEvent(event)
+
+        game.tick()
+        game.tick()
+        game.tick()
+        game.tick()
+        game.rotateLeft()
+        game.tick()
+
+    def test20_TSpinEventIsNotTriggeredWhenLessThanThreeCornersAreOccupied(self):
+        random = RandStub([7, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachTSpinEvent(event)
+
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateRight()
+        game.tick()
+
+    def test21_TSpinEventIsTriggeredWhenACornerInTheFrontIsNotOccupied(self):
+        random = RandStub([7, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachTSpinEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.hardDrop()
+
+        game.rotateLeft()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateRight()
+        game.tick()
+
+    def test21_MiniTSpinEventIsTriggered(self):
+        random = RandStub([7, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        self.miniTSpin = False
+
+        def event():
+            self.miniTSpin = True
+
+        eventNotifier.attachMiniTSpinEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.hardDrop()
+
+        game.rotateLeft()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateRight()
+        game.tick()
+
+        assert self.miniTSpin
+
+    def test21_MiniTSpinEventIsNotTriggeredWhenABackCornerIsNotOccupied(self):
+        random = RandStub([7, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachMiniTSpinEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.hardDrop()
+
+        game.rotateLeft()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateLeft()
+        game.tick()
+
+    def test21_TSpinEventsAreTriggeredBeforeLineClears(self):
+        random = RandStub([1, 4, 7, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        self.spin = False
+
+        def event1():
+            self.spin = True
+
+        def event2():
+            assert self.spin
+
+        eventNotifier.attachTSpinEvent(event1)
+        eventNotifier.attachRowClearEvent(event2)
+
+        game.rotateLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.hardDrop()
+
+        game.rotateLeft()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateLeft()
+        game.tick()
+
+    def test22_RowClearedEventsAreTriggeredBeforePlacePieceEvent(self):
+        random = RandStub([1, 1, 4])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks, eventNotifier)
+
+        self.rowCleared = False
+        self.placedPieceAfterRowClear = False
+
+        def event1():
+            self.rowCleared = True
+
+        def event2():
+            if self.rowCleared:
+                self.placedPieceAfterRowClear = True
+
+        eventNotifier.attachRowClearEvent(event1)
+        eventNotifier.attachPlacedPieceEvent(event2)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+        game.hardDrop()
+
+        assert self.placedPieceAfterRowClear
+
+    def test23_SpinEventsCanUsePiecesOutOfThePlayingFieldAsOccupiedBlocks(self):
+        random = RandStub([1, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, SRSKicks, eventNotifier)
+
+        self.spin = False
+
+        def event():
+            self.spin = True
+
+        eventNotifier.attachMiniTSpinEvent(event)
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateLeft()
+
+        game.tick()
+
+        assert self.spin

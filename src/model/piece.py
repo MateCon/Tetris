@@ -13,6 +13,9 @@ class Piece:
     def do(self, aCallback):
         self.rotationList.currentShape().do(lambda squareOffset: aCallback(self.position + squareOffset))
 
+    def blockPositions(self):
+        self.rotationList.currentShape().do(lambda squareOffset: aCallback(self.position + squareOffset))
+
     def allSatisfy(self, aCallback):
         return self.rotationList.currentShape().allSatisfy(lambda squareOffset: aCallback(self.position + squareOffset))
 
@@ -99,6 +102,18 @@ class Piece:
     def resetRotation(self):
         self.rotationList.reset()
 
+    def cornersForTSpin(self):
+        corners = []
+        for offset in self.rotationList.currentShape().offsetsForTSpinCorners():
+            corners.append(offset + self.position)
+        return corners
+
+    def frontCornersForTSpin(self):
+        corners = []
+        for offset in self.rotationList.currentShape().offsetsForTSpinFrontCorners():
+            corners.append(offset + self.position)
+        return corners
+
 
 class NoPiece:
     def do(self, aCallback):
@@ -148,3 +163,9 @@ class NoPiece:
 
     def ghost(self):
         return NoPiece()
+
+    def cornersForTSpin(self):
+        return []
+
+    def frontCornersForTSpin(self):
+        return []
