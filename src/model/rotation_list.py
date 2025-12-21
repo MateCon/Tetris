@@ -10,8 +10,13 @@ class RotationList:
             for i in range(len(self.pieceShapes)):
                 self.pieceShapes[i] = self.pieceShapes[i].shifted(Point(0, -1))
 
+        self.positions = ['0', 'R', '2', 'L']
+
     def currentShape(self):
         return self.pieceShapes[self.currentRotatationIndex]
+
+    def position(self):
+        return self.positions[self.currentRotatationIndex]
 
     def shiftIndex(self, anOffset):
         self.currentRotatationIndex = (self.currentRotatationIndex + anOffset) % len(self.pieceShapes)
@@ -25,6 +30,12 @@ class RotationList:
         self.rotateLeft()
         return shape
 
+    def positionToTheRight(self):
+        self.rotateRight()
+        position = self.positions[self.currentRotatationIndex]
+        self.rotateLeft()
+        return position
+
     def rotateLeft(self):
         self.shiftIndex(-1)
 
@@ -33,6 +44,12 @@ class RotationList:
         shape = self.currentShape()
         self.rotateRight()
         return shape
+
+    def positionToTheLeft(self):
+        self.rotateLeft()
+        position = self.positions[self.currentRotatationIndex]
+        self.rotateRight()
+        return position
 
     def shiftRotation(self, aRotationIndex, anOffset):
         self.pieceShapes[aRotationIndex] = self.pieceShapes[aRotationIndex].shifted(anOffset)

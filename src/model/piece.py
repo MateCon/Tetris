@@ -61,14 +61,14 @@ class Piece:
             self.position = self.position + anOffset
             self.rotationList.rotateRight()
 
-        self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheRight(), rotateRightWithOffset)
+        self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheRight(), rotateRightWithOffset, self.rotationList.position(), self.rotationList.positionToTheRight())
 
     def rotateLeft(self):
         def rotateLeftWithOffset(anOffset):
             self.position = self.position + anOffset
             self.rotationList.rotateLeft()
 
-        self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheLeft(), rotateLeftWithOffset)
+        self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheLeft(), rotateLeftWithOffset, self.rotationList.position(), self.rotationList.positionToTheLeft())
 
     def asStringList(self):
         if self.activeCharacter() == "I":
