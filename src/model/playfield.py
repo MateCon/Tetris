@@ -54,6 +54,27 @@ class Playfield:
             if isComplete(row):
                 completedRows.append(row)
 
+        return completedRows
+
+    def isEmpty(self):
+        for row in self.blocks:
+            for cell in row:
+                if cell.isOccupied():
+                    return False
+        return True
+
+    def clearRows(self, rows):
+        for row in rows:
+            self.blocks.remove(row)
+            self.addClearRowAtTop()
+
+    def checkForClearedLines(self):
+        completedRows = self.findCompletedRows()
+        self.clearRows(completedRows)
+
+        if self.isEmpty():
+            self.eventNotifier.notifyPerfectClear()
+
         if len(completedRows) == 0:
             self.eventNotifier.notifyComboBreak()
         if len(completedRows) == 1:
@@ -64,16 +85,6 @@ class Playfield:
             self.eventNotifier.notifyTripleRowClear()
         if len(completedRows) == 4:
             self.eventNotifier.notifyQuadrupleRowClear()
-
-        return completedRows
-
-    def clearRows(self, rows):
-        for row in rows:
-            self.blocks.remove(row)
-            self.addClearRowAtTop()
-
-    def checkForClearedLines(self):
-        self.clearRows(self.findCompletedRows())
 
     def asCharMatrix(self) -> list[list[str]]:
         stringList = []

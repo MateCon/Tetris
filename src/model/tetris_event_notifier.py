@@ -14,6 +14,7 @@ class TetrisEventNotifier:
         self.hardDrop = EventNotifierWithOneArgument()
         self.tSpin = EventNotifierWithNoArguments()
         self.miniTSpin = EventNotifierWithNoArguments()
+        self.perfectClear = EventNotifierWithNoArguments()
 
     def attachRowClearEvent(self, event):
         self.rowClear.attach(event)
@@ -80,3 +81,9 @@ class TetrisEventNotifier:
 
     def notifyMiniTSpin(self):
         self.miniTSpin.notify()
+
+    def attachPerfectClearEvent(self, event):
+        self.perfectClear.attach(event)
+
+    def notifyPerfectClear(self):
+        self.perfectClear.notify()

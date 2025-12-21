@@ -207,3 +207,45 @@ class TestGameScore:
         self.eventNotifier.notifyQuadrupleRowClear()
 
         assert self.gameScore.score() == 800 + 1200
+
+    def test31_SingleLinePerfectClearBonus(self):
+        self.eventNotifier.notifyPerfectClear()
+        self.eventNotifier.notifyRowClear()
+
+        assert self.gameScore.score() == 100 + 800
+
+    def test32_PerfectClearBonusesAreAffectedByLevel(self):
+        for _ in range(10):
+            self.eventNotifier.notifyRowClear()
+            self.eventNotifier.notifyComboBreak()
+
+        self.eventNotifier.notifyPerfectClear()
+        self.eventNotifier.notifyRowClear()
+
+        assert self.gameScore.score() == 1000 + (100 + 800) * 2
+
+    def test33_DoubleLinePerfectClearBonus(self):
+        self.eventNotifier.notifyPerfectClear()
+        self.eventNotifier.notifyDoubleRowClear()
+
+        assert self.gameScore.score() == 300 + 1200
+
+    def test34_TripleLinePerfectClearBonus(self):
+        self.eventNotifier.notifyPerfectClear()
+        self.eventNotifier.notifyTripleRowClear()
+
+        assert self.gameScore.score() == 500 + 1800
+
+    def test35_TetrisPerfectClearBonus(self):
+        self.eventNotifier.notifyPerfectClear()
+        self.eventNotifier.notifyQuadrupleRowClear()
+
+        assert self.gameScore.score() == 800 + 2000
+
+    def test36_BackToBackTetrisPerfectClearBonus(self):
+        self.eventNotifier.notifyQuadrupleRowClear()
+        self.eventNotifier.notifyComboBreak()
+        self.eventNotifier.notifyPerfectClear()
+        self.eventNotifier.notifyQuadrupleRowClear()
+
+        assert self.gameScore.score() == 800 + 1200 + 3200

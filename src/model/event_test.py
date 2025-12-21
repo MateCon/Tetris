@@ -693,9 +693,101 @@ class TestGameEvents:
         game.softDrop()
         game.softDrop()
         game.rotateRight()
-        for r in game.asStringList():
-            print(r)
-
         game.moveLeft()
 
         game.tick()
+
+    def test26_PerfectClearEventIsTriggered(self):
+        random = RandStub([4, 4, 4, 4, 4, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        self.perfectClear = False
+
+        def event():
+            self.perfectClear = True
+
+        eventNotifier.attachPerfectClearEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+        game.hardDrop()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        assert self.perfectClear
+
+    def test27_PerfectClearEventIsNotTriggeredIfThePlayfieldIsNotEmpty(self):
+        random = RandStub([4, 4, 4, 4, 4, 4, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachPerfectClearEvent(event)
+
+        game.hardDrop()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+        game.hardDrop()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+    def test28_PerfectClearEventIsTriggeredBeforeRowClearEvents(self):
+        random = RandStub([4, 4, 4, 4, 4, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        self.perfectClear = False
+
+        def event1():
+            self.perfectClear = True
+
+        def event2():
+            assert self.perfectClear
+
+        eventNotifier.attachPerfectClearEvent(event1)
+        eventNotifier.attachDoubleRowClearEvent(event2)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+        game.hardDrop()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
