@@ -60,16 +60,17 @@ class TetrisGame:
                 self.eventNotifier.notifyMiniTSpin()
             self.checkForClearedLines()
             self.goToNextPiece()
+        self.resetSpins()
         self.eventNotifier.notifyPlacedPiece()
 
     def tick(self):
         self.currentPiece.moveIfCantMove(Point(0, -1), self.freezeCurrentPiece)
 
     def moveRight(self):
-        self.currentPiece.move(Point(1, 0))
+        self.currentPiece.moveIfCanMove(Point(1, 0), self.resetSpins)
 
     def moveLeft(self):
-        self.currentPiece.move(Point(-1, 0))
+        self.currentPiece.moveIfCanMove(Point(-1, 0), self.resetSpins)
 
     def rotateRight(self):
         self.currentPiece.rotateRight()
@@ -79,7 +80,12 @@ class TetrisGame:
         self.currentPiece.rotateLeft()
         self.detectTSpin()
 
+    def resetSpins(self):
+        self.lastActionWasATSpin = False
+        self.lastActionWasAMiniTSpin = False
+
     def detectTSpin(self):
+        self.resetSpins()
         if self.activeCharacter() != "T":
             return
 
@@ -101,11 +107,13 @@ class TetrisGame:
 
     def softDrop(self):
         self.currentPiece.moveIfCanMoveIfCantMove(Point(0, -1), self.eventNotifier.notifySoftDrop, self.freezeCurrentPiece)
+        self.resetSpins()
 
     def hardDrop(self):
         self.blocksInLastHardDrop = -1
         self.hardDropRecursively()
         self.eventNotifier.notifyHardDrop(self.blocksInLastHardDrop)
+        self.resetSpins()
 
     def hardDropRecursively(self):
         self.blocksInLastHardDrop += 1
@@ -124,6 +132,7 @@ class TetrisGame:
             self.pieceHeld = self.currentPiece
             self.currentPiece = previousPieceHeld
             self.canHoldPiece = False
+        self.resetSpins()
 
     def getHeldPiece(self):
         return self.pieceHeld

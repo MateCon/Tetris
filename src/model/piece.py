@@ -128,6 +128,9 @@ class NoPiece:
     def moveIfCanMoveIfCantMove(self, anOffset, aHandlerWhenCanMove, aHandlerWhenCantMove):
         pass
 
+    def moveIfCanMove(self, anOffset, aHandlerWhenCanMove):
+        pass
+
     def moveIfCantMove(self, anOffset, aHandlerWhenCantMove):
         pass
 

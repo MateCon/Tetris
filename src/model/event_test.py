@@ -639,3 +639,63 @@ class TestGameEvents:
         game.tick()
 
         assert self.spin
+
+    def test24_SpinEventsAreCancelledAfterARotation(self):
+        random = RandStub([1, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, SRSKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachMiniTSpinEvent(event)
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.moveRight()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateLeft()
+        game.rotateLeft()
+        game.softDrop()
+        game.tick()
+
+    def test25_SpinEventsAreCancelledAfterAnySubsequentAction(self):
+        random = RandStub([1, 7, 4, 7, 1])
+        eventNotifier = TetrisEventNotifier()
+        game = TetrisGame(10, 4, random, SuperRotationListGenerator, NoKicks, eventNotifier)
+
+        def event():
+            assert False
+
+        eventNotifier.attachMiniTSpinEvent(event)
+
+        game.moveLeft()
+        game.moveLeft()
+        game.moveLeft()
+        game.hardDrop()
+
+        game.moveRight()
+        game.moveRight()
+        game.hardDrop()
+
+        game.moveRight()
+        game.hardDrop()
+
+        game.rotateLeft()
+        game.softDrop()
+        game.softDrop()
+        game.softDrop()
+        game.rotateRight()
+        for r in game.asStringList():
+            print(r)
+
+        game.moveLeft()
+
+        game.tick()
