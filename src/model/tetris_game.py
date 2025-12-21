@@ -93,7 +93,7 @@ class TetrisGame:
             previousPieceHeld = self.pieceHeld
             self.pieceHeld = self.currentPiece
             self.currentPiece = previousPieceHeld
-        self.canHoldPiece = False
+            self.canHoldPiece = False
 
     def getHeldPiece(self):
         return self.pieceHeld

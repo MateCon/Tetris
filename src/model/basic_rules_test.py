@@ -585,9 +585,11 @@ class TestBasicRules:
         ]
 
     def test40_APieceCanNotBeHeldOnceRemovedFromHoldingQueue(self):
-        random = RandStub([2, 1, 3])
+        random = RandStub([1, 4, 2])
         game = TetrisGame(10, 4, random, NintendoRotationListGenerator, NoKicks)
 
+        game.hold()
+        game.hardDrop()
         game.hold()
         game.hold()
 
@@ -596,8 +598,8 @@ class TestBasicRules:
             "----------",
             "..........",
             "..........",
-            "..........",
-            "..........",
+            "....oo....",
+            "....oo....",
         ]
 
     def test41_GameCanBeLostWithABlockAboveTheVanishZone(self):
@@ -626,9 +628,17 @@ class TestBasicRules:
 
         game.hold()
 
-        print(game.asStringList())
         assert game.asStringList() == [
             "----------",
             "------oo--",
             "......oo..",
         ]
+
+    def test42_HoldRightAfterFirstHold(self):
+        random = RandStub([4, 1])
+        game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks)
+
+        game.hold()
+        game.hold()
+
+        assert game.getHeldPiece().activeCharacter() == "I"
