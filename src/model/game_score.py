@@ -7,15 +7,29 @@ class GameScore:
         self.miniTSpin = False
         self.tSpinScores = [400, 800, 1200, 1600]
         self.miniTSpinScores = [100, 200, 400]
+        self.lastMoveWasDifficult = False
 
         def addScore(aScore):
             self.value += aScore
+
+        def isMoveDifficult(aNumberOfLines):
+            return aNumberOfLines == 4 or ((self.tSpin or self.miniTSpin) and aNumberOfLines >= 1)
 
         def clearLines(aNumberOfLines, aScore):
             if self.tSpin:
                 aScore = self.tSpinScores[aNumberOfLines]
             if self.miniTSpin:
                 aScore = self.miniTSpinScores[aNumberOfLines]
+
+            isCurrentMoveDifficult = isMoveDifficult(aNumberOfLines)
+            if isMoveDifficult(aNumberOfLines) and self.lastMoveWasDifficult:
+                aScore = aScore * 3 // 2
+
+            if (not self.tSpin) and (not self.miniTSpin) and aNumberOfLines == 0 and self.lastMoveWasDifficult:
+                self.lastMoveWasDifficult = True
+            else:
+                self.lastMoveWasDifficult = isCurrentMoveDifficult
+
             addScore((aScore + self.combo * 50) * self.level())
             self.linesCleared += aNumberOfLines
             self.combo += 1

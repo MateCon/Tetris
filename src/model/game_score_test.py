@@ -174,3 +174,36 @@ class TestGameScore:
         self.eventNotifier.notifyPlacedPiece()
 
         assert self.gameScore.score() == 0
+
+    def test27_BackToBackTetrisMovesAwards50PercentAdditionalScore(self):
+        self.eventNotifier.notifyQuadrupleRowClear()
+        self.eventNotifier.notifyComboBreak()
+        self.eventNotifier.notifyQuadrupleRowClear()
+
+        assert self.gameScore.score() == 800 + 1200
+
+    def test28_BackToBackDifficultMovesAwards50PercentAdditionalScore(self):
+        self.eventNotifier.notifyTSpin()
+        self.eventNotifier.notifyRowClear()
+        self.eventNotifier.notifyComboBreak()
+        self.eventNotifier.notifyMiniTSpin()
+        self.eventNotifier.notifyRowClear()
+
+        assert self.gameScore.score() == 800 + 300
+
+    def test29_NonBackToBackDifficultMovesDoNotAward50PercentAdditionalScore(self):
+        self.eventNotifier.notifyQuadrupleRowClear()
+        self.eventNotifier.notifyComboBreak()
+        self.eventNotifier.notifyRowClear()
+        self.eventNotifier.notifyComboBreak()
+        self.eventNotifier.notifyQuadrupleRowClear()
+
+        assert self.gameScore.score() == 800 + 100 + 800
+
+    def test30_APiecePlacementDoesNotCancelBackToBackMoves(self):
+        self.eventNotifier.notifyQuadrupleRowClear()
+        self.eventNotifier.notifyComboBreak()
+        self.eventNotifier.notifyPlacedPiece()
+        self.eventNotifier.notifyQuadrupleRowClear()
+
+        assert self.gameScore.score() == 800 + 1200
