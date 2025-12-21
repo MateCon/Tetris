@@ -54,13 +54,13 @@ class PlayPageComponent(DesktopComponent):
 
         self.applicationContext.inputObserver.addKeydownObserver(self, pygame.K_SPACE, 100, self.createGameComponentWithKeyboard)
 
-        self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.mapCreateGame)
+        self.applicationContext.joystickLifecycleObserver.onJoystickConnected(lambda joystick: self.mapCreateGame(joystick.get_instance_id()))
         self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.deleteGameComponentWithJoystickId)
         self.applicationContext.joystickLifecycleObserver.onJoystickDisconnected(self.unmapCreateGame)
 
-    def mapCreateGame(self, aJoystick):
-        instanceId = aJoystick.get_instance_id()
-        self.applicationContext.inputObserver.addKeydownObserver(self, "JOYSTICK_CROSS", instanceId, lambda: self.createGameComponentWithJoystickId(instanceId))
+    def mapCreateGame(self, anInstanceId):
+        self.applicationContext.inputObserver.removeDevice(anInstanceId)
+        self.applicationContext.inputObserver.addKeydownObserver(self, "JOYSTICK_CROSS", anInstanceId, lambda: self.createGameComponentWithJoystickId(anInstanceId))
 
     def unmapCreateGame(self, anInstanceId):
         self.applicationContext.inputObserver.removePair(anInstanceId, "JOYSTICK_CROSS")
@@ -77,16 +77,17 @@ class PlayPageComponent(DesktopComponent):
             self.gameComponents[100].destroy()
             del self.gameComponents[100]
 
-    def createGameComponentWithJoystickId(self, anInstenceId):
-        self.createGameComponent(anInstenceId, self.createJoystickMapper(anInstenceId))
+    def createGameComponentWithJoystickId(self, anInstanceId):
+        self.createGameComponent(anInstanceId, self.createJoystickMapper(anInstanceId))
 
     def createGameComponentWithJoystick(self, aJoystick):
         self.createGameComponentWithJoystickId(aJoystick.get_instance_id())
 
-    def deleteGameComponentWithJoystickId(self, anInstenceId):
-        if anInstenceId in self.gameComponents.keys():
-            self.gameComponents[anInstenceId].destroy()
-            del self.gameComponents[anInstenceId]
+    def deleteGameComponentWithJoystickId(self, anInstanceId):
+        if anInstanceId in self.gameComponents.keys():
+            self.gameComponents[anInstanceId].destroy()
+            del self.gameComponents[anInstanceId]
+            self.mapCreateGame(anInstanceId)
 
     def createGameComponent(self, anInstanceId, aKeybindMapper):
         tetrisEventNotifier = TetrisEventNotifier()

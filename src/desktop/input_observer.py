@@ -33,13 +33,26 @@ class InputObserver:
         for key, handlerList in aHandlerDict.items():
             newHandlerList = []
             for (anotherSenderObject, aHandler) in handlerList:
-                if anotherSenderObject is not aSenderObject:
+                if not anotherSenderObject is aSenderObject:
                     newHandlerList.append((anotherSenderObject, aHandler))
             aHandlerDict[key] = newHandlerList
 
     def removeFrom(self, aSenderObject):
         self.removeFromIn(aSenderObject, self.keyupHandlers)
         self.removeFromIn(aSenderObject, self.keydownHandlers)
+
+    def removeDeviceIn(self, aDevice, aHandlerDict):
+        pairsToDelete = []
+        for (key, anotherDevice) in aHandlerDict.keys():
+            if aDevice == anotherDevice:
+                pairsToDelete.append((key, anotherDevice))
+
+        for pair in pairsToDelete:
+            del aHandlerDict[pair]
+
+    def removeDevice(self, aDevice):
+        self.removeDeviceIn(aDevice, self.keyupHandlers)
+        self.removeDeviceIn(aDevice, self.keydownHandlers)
 
     def removePair(self, aKey, aDevice):
         if (aKey, aDevice) in self.keydownHandlers.keys():
