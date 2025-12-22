@@ -1,0 +1,9 @@
+[run]
+source =
+    src/tetris_model
+    src/server_model
+
+[report]
+exclude_also =
+    pass
+    assert False

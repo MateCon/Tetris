@@ -4,13 +4,15 @@ from desktop.play_page_component import PlayPageComponent
 from desktop.area import Area
 from desktop.joystick_observer import JoystickObserver, JoystickLifecycleObserver
 import pygame
+import os
+import sys
 
 
 class DesktopApplicationRunner:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Tetris")
-        pygame.display.set_icon(pygame.image.load("assets/images/logo.png"))
+        pygame.display.set_icon(pygame.image.load(self.resourcePath("assets/images/logo.png")))
         pygame.font.init()
         pygame.joystick.init()
         self.joysticks = {}
@@ -20,12 +22,20 @@ class DesktopApplicationRunner:
             pygame.display.set_mode(),
             InputObserver(),
             self.joysticks,
-            self.joystickLifecycleObserver
+            self.joystickLifecycleObserver,
+            self.resourcePath
         )
         self.page = PlayPageComponent(self.applicationContext)
         self.timeSinceLastFrame = 0
         self.joystickObservers = {}
         self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.addJoystickObserver)
+
+    def resourcePath(self, relativePath):
+        try:
+            basePath = sys._MEIPASS
+        except AttributeError:
+            basePath = os.path.abspath(".")
+        return os.path.join(basePath, relativePath)
 
     def addJoystickObserver(self, aJoystickId):
         self.joystickObservers[aJoystickId] = JoystickObserver(aJoystickId, self.applicationContext)

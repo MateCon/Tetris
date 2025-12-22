@@ -52,9 +52,9 @@ class TestTime:
         assert time.asString() == "22s"
 
     def test08_TimeStringSecondsAreAlwaysTwoDigits(self):
-        time = Time(0, 3, 0, 0, 0)
+        time = Time(0, 1, 0, 0, 0)
 
-        assert time.asString() == "03s"
+        assert time.asString() == "01s"
 
     def test09_TimeStringUpToHoursShowsSecondsAndMinutes(self):
         time = Time(0, 10, 8, 0, 0)

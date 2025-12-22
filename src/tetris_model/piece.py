@@ -13,9 +13,6 @@ class Piece:
     def do(self, aCallback):
         self.rotationList.currentShape().do(lambda squareOffset: aCallback(self.position + squareOffset))
 
-    def blockPositions(self):
-        self.rotationList.currentShape().do(lambda squareOffset: aCallback(self.position + squareOffset))
-
     def allSatisfy(self, aCallback):
         return self.rotationList.currentShape().allSatisfy(lambda squareOffset: aCallback(self.position + squareOffset))
 
@@ -43,9 +40,6 @@ class Piece:
 
     def moveIfCantMove(self, anOffset, aHandlerWhenCantMove):
         self.moveIfCanMoveIfCantMove(anOffset, lambda: None, aHandlerWhenCantMove)
-
-    def move(self, anOffset):
-        self.moveIfCantMove(anOffset, lambda: None)
 
     def activeCharacter(self):
         return self.activeChar
@@ -115,7 +109,7 @@ class Piece:
         return corners
 
 
-class NoPiece:
+class NoPiece: # pragma: no cover
     def do(self, aCallback):
         pass
 
@@ -132,9 +126,6 @@ class NoPiece:
         pass
 
     def moveIfCantMove(self, anOffset, aHandlerWhenCantMove):
-        pass
-
-    def move(self, anOffset):
         pass
 
     def activeCharacter(self):

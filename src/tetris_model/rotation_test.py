@@ -336,7 +336,7 @@ class TestNoWallKicks:
         ]
 
 
-class TestSegaRotationSystem:
+class TestSuperRotationSystem:
     def test01_IPieceStartsHigherThanNintendo(self):
         random = RandStub([1])
         game = TetrisGame(10, 4, random, SegaRotationListGenerator, NoKicks)

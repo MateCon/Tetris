@@ -100,7 +100,7 @@ class TestUserBase:
         with pytest.raises(SessionNotFound):
             self.sessionRegistry.verify(unusedId)
 
-    def test15_SessionVerificationFailsIfTheSessionIsExpired(self):
+    def test15_SessionVerificationFailsIfTheSessionJustExpired(self):
         self.userBase.register(self.john)
 
         session = self.userBase.login("John", "1234")
