@@ -1,7 +1,7 @@
-from model.tetris_game import TetrisGame
-from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator, SuperRotationListGenerator
-from model.rand import RandStub
-from model.kicks import NoKicks
+from tetris_model.tetris_game import TetrisGame
+from tetris_model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator, SuperRotationListGenerator
+from tetris_model.rand import RandStub
+from tetris_model.kicks import NoKicks
 
 
 class TestNintendoRotationSystem:

@@ -1,4 +1,4 @@
-from model.event_notifier import EventNotifierWithNoArguments, EventNotifierWithOneArgument
+from tetris_model.event_notifier import EventNotifierWithNoArguments, EventNotifierWithOneArgument
 
 
 class TetrisEventNotifier:

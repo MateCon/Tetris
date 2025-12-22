@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from model.point import Point
+from tetris_model.point import Point
 
 
 class WallKickSystem(ABC):

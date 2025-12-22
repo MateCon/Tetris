@@ -64,4 +64,4 @@ class DesktopApplicationRunner:
             self.update()
 
             pygame.display.flip()
-            self.timeSinceLastFrame = self.clock.tick(60)
+            self.timeSinceLastFrame = self.clock.tick(30)

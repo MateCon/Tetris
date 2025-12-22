@@ -1,5 +1,5 @@
-from model.cell import Cell
-from model.point import Point
+from tetris_model.cell import Cell
+from tetris_model.point import Point
 
 
 class Playfield:

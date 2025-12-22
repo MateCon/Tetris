@@ -2,11 +2,11 @@ from pygame.joystick import Joystick
 from desktop.desktop_component import DesktopComponent
 from desktop.tetris_game_component import TetrisGameComponent
 from desktop.area import Area
-from model.tetris_event_notifier import TetrisEventNotifier
-from model.tetris_game import TetrisGame
-from model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator, SuperRotationListGenerator
-from model.kicks import SRSKicks
-from model.rand import Rand
+from tetris_model.tetris_event_notifier import TetrisEventNotifier
+from tetris_model.tetris_game import TetrisGame
+from tetris_model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator, SuperRotationListGenerator
+from tetris_model.kicks import SRSKicks
+from tetris_model.rand import Rand
 import pygame
 
 

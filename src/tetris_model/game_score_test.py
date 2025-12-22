@@ -1,5 +1,5 @@
-from model.tetris_event_notifier import TetrisEventNotifier
-from model.game_score import GameScore
+from tetris_model.tetris_event_notifier import TetrisEventNotifier
+from tetris_model.game_score import GameScore
 import pytest
 
 

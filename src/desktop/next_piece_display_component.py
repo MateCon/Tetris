@@ -1,4 +1,4 @@
-from model.point import Point
+from tetris_model.point import Point
 from desktop.area import Area
 from desktop.desktop_component import DesktopComponent
 import pygame

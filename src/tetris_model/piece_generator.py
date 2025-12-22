@@ -1,5 +1,5 @@
-from model.piece import Piece
-from model.point import Point
+from tetris_model.piece import Piece
+from tetris_model.point import Point
 
 
 class PieceGenerator:

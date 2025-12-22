@@ -1,9 +1,9 @@
-from model.piece_generator import PieceGenerator
-from model.playfield import Playfield
-from model.point import Point
-from model.piece_bag import PieceBag
-from model.tetris_event_notifier import TetrisEventNotifier
-from model.piece import NoPiece
+from tetris_model.piece_generator import PieceGenerator
+from tetris_model.playfield import Playfield
+from tetris_model.point import Point
+from tetris_model.piece_bag import PieceBag
+from tetris_model.tetris_event_notifier import TetrisEventNotifier
+from tetris_model.piece import NoPiece
 
 
 class TetrisGame:

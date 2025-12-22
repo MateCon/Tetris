@@ -6,8 +6,8 @@ from desktop.next_piece_display_component import NextPieceDisplayComponent
 from desktop.held_piece_display_component import HeldPieceDisplayComponent
 from desktop.game_actions import RunningGameActions
 from desktop.pause_component import PauseComponent
-from model.game_score import GameScore
-from model.time import Time
+from tetris_model.game_score import GameScore
+from tetris_model.time import Time
 
 
 class TetrisGameComponent(DesktopComponent):

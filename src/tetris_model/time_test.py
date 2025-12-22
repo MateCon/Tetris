@@ -1,4 +1,4 @@
-from model.time import Time
+from tetris_model.time import Time
 
 
 class TestTime:

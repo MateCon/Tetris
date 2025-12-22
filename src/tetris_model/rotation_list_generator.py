@@ -1,6 +1,6 @@
-from model.rotation_list import RotationList
-from model.piece_shape import PieceShape
-from model.point import Point
+from tetris_model.rotation_list import RotationList
+from tetris_model.piece_shape import PieceShape
+from tetris_model.point import Point
 
 
 class NintendoRotationListGenerator:

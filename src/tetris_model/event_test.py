@@ -1,9 +1,9 @@
-from model.tetris_event_notifier import TetrisEventNotifier
-from model.event_notifier import RepeatedObserver
-from model.tetris_game import TetrisGame
-from model.rotation_list_generator import NintendoRotationListGenerator, SuperRotationListGenerator
-from model.rand import RandStub
-from model.kicks import NoKicks, SRSKicks
+from tetris_model.tetris_event_notifier import TetrisEventNotifier
+from tetris_model.event_notifier import RepeatedObserver
+from tetris_model.tetris_game import TetrisGame
+from tetris_model.rotation_list_generator import NintendoRotationListGenerator, SuperRotationListGenerator
+from tetris_model.rand import RandStub
+from tetris_model.kicks import NoKicks, SRSKicks
 import pytest
 
 
