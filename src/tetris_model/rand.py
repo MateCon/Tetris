@@ -8,7 +8,7 @@ class RandomOrderingStream(ABC):
         pass
 
 
-class Rand(RandomOrderingStream): # pragma: no cover
+class Rand(RandomOrderingStream):  # pragma: no cover
     def nextOrdering(self, length):
         ordering = [n for n in range(length)]
         random.shuffle(ordering)

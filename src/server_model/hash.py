@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError 
 
 
 class HashStrategy(ABC):
@@ -9,6 +11,22 @@ class HashStrategy(ABC):
     @abstractmethod
     def verify(self, aHashedString, aString) -> bool:
         pass
+
+
+class ArgonHash(HashStrategy):  # pragma: no cover
+    def __init__(self):
+        self.hasher = PasswordHasher()
+
+    def hash(self, aString):
+        return self.hasher.hash(aString)
+
+    def verify(self, aHashedString, aString):
+        try:
+            self.hasher.verify(aHashedString, aString)
+            return True
+        except VerifyMismatchError:
+            return False
+
 
 
 class HashStub(HashStrategy):

@@ -20,6 +20,17 @@ class SessionRegistry:
                 return
         raise SessionNotFound
 
+    def size(self):
+        return len(self._sessions)
+
+    def isEmpty(self):
+        return len(self._sessions) == 0
+
+    def remove(self, anId):
+        for session in self._sessions:
+            if session.id() == anId:
+                return self._sessions.remove(session)
+
 
 class SessionNotFound(Exception):
     pass

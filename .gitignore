@@ -1,5 +1,6 @@
 # Custom enviroments
 venv*/
+ssl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

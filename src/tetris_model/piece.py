@@ -109,7 +109,7 @@ class Piece:
         return corners
 
 
-class NoPiece: # pragma: no cover
+class NoPiece:  # pragma: no cover
     def do(self, aCallback):
         pass
 

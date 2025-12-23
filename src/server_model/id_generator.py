@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from secrets import token_urlsafe
 
 
 class IdGenerator(ABC):
@@ -7,7 +8,12 @@ class IdGenerator(ABC):
         pass
 
 
-class AutoincrementalIdGenerator:
+class SecretIdGenerator(IdGenerator):  # pragma: no cover
+    def nextId(self):
+        return token_urlsafe(32)
+
+
+class AutoincrementalIdGenerator(IdGenerator):
     def __init__(self):
         self.currentId = 0
 

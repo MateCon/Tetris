@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from time import time
 
 
 class AbstractClock(ABC):
@@ -9,6 +10,11 @@ class AbstractClock(ABC):
 
     def aWeek(self):
         return timedelta(weeks=1)
+
+
+class Clock(AbstractClock):  # pragma: no cover
+    def now(self):
+        return datetime.fromtimestamp(time())
 
 
 class ClockStub(AbstractClock):

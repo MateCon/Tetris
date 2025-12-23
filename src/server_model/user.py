@@ -1,18 +1,19 @@
 class User:
-    def __init__(self, aName, aPassword, aHashStrategy):
+    def __init__(self, aName, aHashedPassword):
         self.assertNameIsNotTooLong(aName)
         self.assertNameIsNotTooShort(aName)
-        self.assertPasswordIsNotTooLong(aPassword)
-        self.assertPasswordIsNotTooShort(aPassword)
-        self.hashStrategy = aHashStrategy
+        self.assertHashedPasswordIsNotTooLong(aHashedPassword)
         self._name = aName
-        self._password = self.hashStrategy.hash(aPassword)
+        self._hashedPassword = aHashedPassword
 
     def name(self):
         return self._name
 
-    def hasPassword(self, anotherPassword):
-        return self.hashStrategy.verify(self._password, anotherPassword)
+    def hasPassword(self, anotherPassword, aHashStrategy):
+        return aHashStrategy.verify(self._hashedPassword, anotherPassword)
+
+    def hashedPassword(self):
+        return self._hashedPassword
 
     def assertNameIsNotTooLong(self, aName):
         if len(aName) > 20:
@@ -22,13 +23,9 @@ class User:
         if len(aName) < 3:
             raise NameTooShort
 
-    def assertPasswordIsNotTooLong(self, aPassword):
-        if len(aPassword) > 20:
-            raise PasswordTooLong
-
-    def assertPasswordIsNotTooShort(self, aPassword):
-        if len(aPassword) < 3:
-            raise PasswordTooShort
+    def assertHashedPasswordIsNotTooLong(self, aPassword):
+        if len(aPassword) > 100:
+            raise HashedPasswordTooLong
 
 
 class NameTooLong(Exception):
@@ -39,9 +36,5 @@ class NameTooShort(Exception):
     pass
 
 
-class PasswordTooLong(Exception):
-    pass
-
-
-class PasswordTooShort(Exception):
+class HashedPasswordTooLong(Exception):
     pass
