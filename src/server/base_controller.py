@@ -31,7 +31,7 @@ class BaseController:
         self.app.register_error_handler(WrongPassword, self.wrongPasswordHandler)
 
     def hello_world(self):
-        return "Hello, World!!!"
+        return "Hello, World!!"
 
     def sessionToJsonResult(self, aSession):
         return json.dumps({

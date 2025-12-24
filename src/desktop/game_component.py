@@ -1,4 +1,3 @@
-import pygame
 from desktop.desktop_component import DesktopComponent
 from desktop.area import Area
 from desktop.held_command_repeater import HeldCommandRepeater
@@ -10,7 +9,7 @@ from tetris_model.game_score import GameScore
 from tetris_model.time import Time
 
 
-class TetrisGameComponent(DesktopComponent):
+class GameComponent(DesktopComponent):
     def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper, aColorScheme, aRestartMethod, aDeleteMethod):
         super().__init__(anApplicationContext)
         self.rows = anAmmountOfRows
@@ -200,12 +199,3 @@ class TetrisGameComponent(DesktopComponent):
 
         if not self.isPaused() and not self.pauseComponent.lost():
             self.time = self.time + Time.fromMilliseconds(millisecondsSinceLastUpdate)
-
-    def destroy(self):
-        self.inputObserver.removeFrom(self)
-
-    def mapKeydown(self, aDeviceId, aKey, anAction):
-        self.inputObserver.addKeydownObserver(self, aKey, aDeviceId, anAction)
-
-    def mapKeyup(self, aDeviceId, aKey, anAction):
-        self.inputObserver.addKeyupObserver(self, aKey, aDeviceId, anAction)

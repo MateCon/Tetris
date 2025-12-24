@@ -1,6 +1,6 @@
 from desktop.input_observer import InputObserver
 from desktop.application_context import ApplicationContext
-from desktop.play_page_component import PlayPageComponent
+from desktop.multiple_device_play_component import MultipleDevicePlayComponent
 from desktop.area import Area
 from desktop.joystick_observer import JoystickObserver, JoystickLifecycleObserver
 import pygame
@@ -25,7 +25,7 @@ class DesktopApplicationRunner:
             self.joystickLifecycleObserver,
             self.resourcePath
         )
-        self.page = PlayPageComponent(self.applicationContext)
+        self.page = MultipleDevicePlayComponent(self.applicationContext)
         self.timeSinceLastFrame = 0
         self.joystickObservers = {}
         self.applicationContext.joystickLifecycleObserver.onJoystickConnected(self.addJoystickObserver)
