@@ -6,10 +6,11 @@ from server_model.id_generator import SecretIdGenerator
 from server_model.user_base import NameTaken, UserBase, UserNotFound, WrongPassword, PasswordTooShort, PasswordTooLong
 from server_model.user import NameTooShort, NameTooLong
 from server_model.session_registry import SessionRegistry
-from server.server_errors import ExpectedQueryParameter
+from server.server_errors import ExpectedBodyParameter, ExpectedJSONDictAsBody
+import json
 
 
-class BaseSection:
+class BaseController:
     def __init__(self, app, aBaseUrl, aDatabase):
         self.app = app
         self.database = aDatabase
@@ -32,31 +33,46 @@ class BaseSection:
     def hello_world(self):
         return "Hello, World!!!"
 
-    def register(self):
-        name = request.args.get("name")
-        if not name:
-            raise ExpectedQueryParameter("name")
+    def sessionToJsonResult(self, aSession):
+        return json.dumps({
+            "session": {
+                "id": aSession.id(),
+                "user_name": aSession.user().name(),
+                "creation_date": aSession.expirationDate().isoformat(),
+                "duration": aSession.duration().total_seconds()
+            }
+        })
 
-        password = request.args.get("password")
+    def register(self):
+        body = request.get_json(silent=True)
+
+        if not isinstance(body, dict):
+            raise ExpectedJSONDictAsBody
+
+        name = body.get("name")
+        if not name:
+            raise ExpectedBodyParameter("name")
+
+        password = body.get("password")
         if not password:
-            raise ExpectedQueryParameter("password")
+            raise ExpectedBodyParameter("password")
 
         session = self.authService.register(name, password)
 
-        return f"{session.id()}, {session.expirationDate()}"
+        return self.sessionToJsonResult(session)
 
     def login(self):
-        name = request.args.get("name")
+        name = request.form["name"]
         if not name:
-            raise ExpectedQueryParameter("name")
+            raise ExpectedBodyParameter("name")
 
-        password = request.args.get("password")
+        password = request.form["password"]
         if not password:
-            raise ExpectedQueryParameter("password")
+            raise ExpectedBodyParameter("password")
 
         session = self.authService.login(name, password)
 
-        return f"{session.id()}, {session.expirationDate()}"
+        return self.sessionToJsonResult(session)
 
     def nameTakenHandler(self, error):
         return "Name already taken, pick another one", 400
