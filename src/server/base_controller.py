@@ -62,11 +62,16 @@ class BaseController:
         return self.sessionToJsonResult(session)
 
     def login(self):
-        name = request.form["name"]
+        body = request.get_json(silent=True)
+
+        if not isinstance(body, dict):
+            raise ExpectedJSONDictAsBody
+
+        name = body.get("name")
         if not name:
             raise ExpectedBodyParameter("name")
 
-        password = request.form["password"]
+        password = body.get("password")
         if not password:
             raise ExpectedBodyParameter("password")
 
