@@ -6,6 +6,22 @@ from desktop.joystick_observer import JoystickObserver, JoystickLifecycleObserve
 import pygame
 import os
 import sys
+from server_model.clock import Clock
+
+
+class SavedSessions:
+    def __init__(self):
+        self.sessions = []
+
+    def add(self, aSession):
+        self.sessions.append(aSession)
+
+    def do(self, anAction):
+        currentTime = Clock().now()
+
+        for session in self.sessions:
+            if session.expirationDate() > currentTime:
+                anAction(session)
 
 
 class DesktopApplicationRunner:
@@ -18,12 +34,14 @@ class DesktopApplicationRunner:
         self.joysticks = {}
         self.clock = pygame.time.Clock()
         self.joystickLifecycleObserver = JoystickLifecycleObserver()
+        self.savedUsers = SavedSessions()
         self.applicationContext = ApplicationContext(
             pygame.display.set_mode(),
             InputObserver(),
             self.joysticks,
             self.joystickLifecycleObserver,
-            self.resourcePath
+            self.resourcePath,
+            self.savedUsers
         )
         self.page = MultipleDevicePlayComponent(self.applicationContext)
         self.timeSinceLastFrame = 0

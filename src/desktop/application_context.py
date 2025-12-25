@@ -2,12 +2,13 @@ import pygame
 
 
 class ApplicationContext:
-    def __init__(self, aScreen, anInputObserver, aJoystickDictionary, aJoystickLifecycleObserver, aResourcePathMethod):
+    def __init__(self, aScreen, anInputObserver, aJoystickDictionary, aJoystickLifecycleObserver, aResourcePathMethod, someSavedSessions):
         self.screen = aScreen
         self.inputObserver = anInputObserver
         self.joysticks = aJoystickDictionary
         self.joystickLifecycleObserver = aJoystickLifecycleObserver
         self.resourcePathMethod = aResourcePathMethod
+        self.savedSessions = someSavedSessions
         self.isRunning = True
 
     def drawArea(self, aColor, anArea):

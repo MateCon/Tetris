@@ -74,6 +74,7 @@ class LoginComponent(DesktopComponent):
                     datetime.fromisoformat(sessionDictionary.get("creation_date")),
                     timedelta(seconds=int(sessionDictionary.get("duration")))
                 )
+                self.applicationContext.savedSessions.add(session)
                 self.playWith(session)
             except Exception:
                 self.hasRegistered = False
@@ -137,6 +138,7 @@ class RegisterComponent(DesktopComponent):
                     datetime.fromisoformat(sessionDictionary.get("creation_date")),
                     timedelta(seconds=int(sessionDictionary.get("duration")))
                 )
+                self.applicationContext.savedSessions.add(session)
                 self.playWith(session)
             except Exception:
                 self.hasRegistered = False
@@ -450,16 +452,25 @@ class TextInputComponent(InputComponent):
 
 
 class UserSelectMenuComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aFunctionToOpenLogin, aFunctionToOpenRegister):
+    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aFunctionToOpenLogin, aFunctionToOpenRegister, aPlayWithFunction):
         self.applicationContext = anApplicationContext
         self.cellSize = aCellSize
         self.borderColor = (255, 255, 255)
         self.borderWidth = 2
+        self.playWith = aPlayWithFunction
         self.buttons = [
             ButtonComponent(anApplicationContext, "Login", aFunctionToOpenLogin),
             ButtonComponent(anApplicationContext, "Register", aFunctionToOpenRegister)
         ]
+        self.applicationContext.savedSessions.do(
+            lambda session: self.buttons.insert(0,
+                ButtonComponent(anApplicationContext, session.user().name(), lambda: self.loginWithSession(session))
+            )
+        )
         self.form = FormComponent(anApplicationContext, "Select User", self.buttons, aKeybindMapper)
+
+    def loginWithSession(self, aSession):
+        self.playWith(aSession)
 
     def draw(self, anArea):
         self.form.draw(anArea)
@@ -481,7 +492,7 @@ class UserSelectComponent(DesktopComponent):
         self.playWith = aPlayWithFunction
         self.borderColor = (255, 255, 255)
         self.borderWidth = 2
-        self.component = UserSelectMenuComponent(anApplicationContext, aCellSize, aKeybindMapper, self.openLogin, self.openRegister)
+        self.component = UserSelectMenuComponent(anApplicationContext, aCellSize, aKeybindMapper, self.openLogin, self.openRegister, self.playWith)
 
     def area(self):
         return Area(0, 0, self.cellSize * self.cols, self.cellSize * (self.rows + 2))
@@ -577,6 +588,7 @@ class DeviceComponent(DesktopComponent):
         self.applicationContext.inputObserver.addKeyupObserver(fromObject, aKey, self.device, anAction)
 
     def unmap(self):
+        self.applicationContext.inputObserver.removeFrom(self.component)
         self.applicationContext.inputObserver.removeFrom(self)
 
     def draw(self, anArea):
