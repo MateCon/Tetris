@@ -21,7 +21,7 @@ import json
 
 
 class LoginComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aPlayWithFunction):
+    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aPlayWithFunction, anExitFunction):
         self.cellSize = aCellSize
         self.applicationContext = anApplicationContext
         self.playWith = aPlayWithFunction
@@ -30,7 +30,7 @@ class LoginComponent(DesktopComponent):
         self.passwordInput = TextInputComponent(anApplicationContext, "Password")
         self.submitButton = ButtonComponent(anApplicationContext, "Submit", self.submit)
         self.inputs = [self.nameInput, self.passwordInput, self.submitButton]
-        self.form = FormComponent(anApplicationContext, "Login", self.inputs, aKeybindMapper)
+        self.form = FormComponent(anApplicationContext, "Login", self.inputs, aKeybindMapper, anExitFunction)
         self.response = ""
         self.hasRegistered = False
         self.errorHappened = False
@@ -85,7 +85,7 @@ class LoginComponent(DesktopComponent):
 
 
 class RegisterComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aPlayWithFunction):
+    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aPlayWithFunction, anExitFunction):
         self.cellSize = aCellSize
         self.applicationContext = anApplicationContext
         self.playWith = aPlayWithFunction
@@ -94,7 +94,7 @@ class RegisterComponent(DesktopComponent):
         self.passwordInput = TextInputComponent(anApplicationContext, "Password")
         self.submitButton = ButtonComponent(anApplicationContext, "Submit", self.submit)
         self.inputs = [self.nameInput, self.passwordInput, self.submitButton]
-        self.form = FormComponent(anApplicationContext, "Register", self.inputs, aKeybindMapper)
+        self.form = FormComponent(anApplicationContext, "Register", self.inputs, aKeybindMapper, anExitFunction)
         self.response = ""
         self.hasRegistered = False
         self.errorHappened = False
@@ -224,11 +224,12 @@ class VirtualKeyboardComponent(DesktopComponent):
 
 
 class FormComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aTitle, aListOfInputs, aKeybindMapper):
+    def __init__(self, anApplicationContext, aTitle, aListOfInputs, aKeybindMapper, anExitFunction):
         assert len(aListOfInputs) > 0
         self.applicationContext = anApplicationContext
         self.title = aTitle
         self.inputs = aListOfInputs
+        self.exitFunction = anExitFunction
         self.currentInputIndex = 0
         self.inputs[0].focus()
         self.virtualKeyboard = VirtualKeyboardComponent(anApplicationContext)
@@ -266,7 +267,8 @@ class FormComponent(DesktopComponent):
         if self.virtualKeyboard.isOpen():
             self.virtualKeyboard.close()
         else:
-            pass
+            self.destroy()
+            self.exitFunction()
 
     def moveDown(self):
         if self.virtualKeyboard.isOpen():
@@ -452,7 +454,7 @@ class TextInputComponent(InputComponent):
 
 
 class UserSelectMenuComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aFunctionToOpenLogin, aFunctionToOpenRegister, aPlayWithFunction):
+    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aFunctionToOpenLogin, aFunctionToOpenRegister, aPlayWithFunction, anExitFunction):
         self.applicationContext = anApplicationContext
         self.cellSize = aCellSize
         self.borderColor = (255, 255, 255)
@@ -467,7 +469,7 @@ class UserSelectMenuComponent(DesktopComponent):
                 ButtonComponent(anApplicationContext, session.user().name(), lambda: self.loginWithSession(session))
             )
         )
-        self.form = FormComponent(anApplicationContext, "Select User", self.buttons, aKeybindMapper)
+        self.form = FormComponent(anApplicationContext, "Select User", self.buttons, aKeybindMapper, anExitFunction)
 
     def loginWithSession(self, aSession):
         self.playWith(aSession)
@@ -483,16 +485,20 @@ class UserSelectMenuComponent(DesktopComponent):
 
 
 class UserSelectComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, anAmmountOfRows, anAmmountOfCols, aCellSize, aKeybindMapper, aPlayWithFunction):
+    def __init__(self, anApplicationContext, anAmmountOfRows, anAmmountOfCols, aCellSize, aKeybindMapper, aPlayWithFunction, anExitFunction):
         self.applicationContext = anApplicationContext
         self.rows = anAmmountOfRows
         self.cols = anAmmountOfCols
         self.cellSize = aCellSize
         self.keybindMapper = aKeybindMapper
         self.playWith = aPlayWithFunction
+        self.exitFunction = anExitFunction
         self.borderColor = (255, 255, 255)
         self.borderWidth = 2
-        self.component = UserSelectMenuComponent(anApplicationContext, aCellSize, aKeybindMapper, self.openLogin, self.openRegister, self.playWith)
+        self.openSelectMenu()
+
+    def openSelectMenu(self):
+        self.component = UserSelectMenuComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.openLogin, self.openRegister, self.playWith, self.exitFunction)
 
     def area(self):
         return Area(0, 0, self.cellSize * self.cols, self.cellSize * (self.rows + 2))
@@ -511,11 +517,11 @@ class UserSelectComponent(DesktopComponent):
 
     def openLogin(self):
         self.component.destroy()
-        self.component = LoginComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.playWith)
+        self.component = LoginComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.playWith, self.openSelectMenu)
 
     def openRegister(self):
         self.component.destroy()
-        self.component = RegisterComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.playWith)
+        self.component = RegisterComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.playWith, self.openSelectMenu)
 
     def draw(self, anArea):
         centeredArea = self.areaWithoutVanishZone(anArea)
@@ -543,7 +549,8 @@ class DeviceComponent(DesktopComponent):
             self.cols,
             self.cellSize,
             self.mapUserSelectComponent,
-            self.playWith
+            self.playWith,
+            self.deletionFunction
         )
 
     def playWith(self, aSession):
@@ -570,12 +577,9 @@ class DeviceComponent(DesktopComponent):
             self.mapGameComponent,
             ColorScheme(),
             self.restartGame,
-            self.deleteGame,
+            self.deletionFunction,
             self.session
         )
-
-    def deleteGame(self):
-        self.deletionFunction()
 
     def restartGame(self):
         self.unmap()
