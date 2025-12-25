@@ -10,7 +10,7 @@ from tetris_model.time import Time
 
 
 class GameComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper, aColorScheme, aRestartMethod, aDeleteMethod):
+    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper, aColorScheme, aRestartMethod, aDeleteMethod, aSession):
         super().__init__(anApplicationContext)
         self.rows = anAmmountOfRows
         self.cols = anAmmountOfCols
@@ -18,6 +18,7 @@ class GameComponent(DesktopComponent):
         self.cellSize = cellSize
         self.borderWidth = 2
         self.colorScheme = aColorScheme
+        self.session = aSession
         self.timeSinceLastTick = 0
         self.inputObserver = self.applicationContext.inputObserver
         self.tetrisEventNotifier = aTetrisEventNotifier
@@ -34,9 +35,7 @@ class GameComponent(DesktopComponent):
 
         self.scoreTracker = GameScore(self.tetrisEventNotifier)
 
-        self.restartMethod = aRestartMethod
-        self.deleteMethod = aDeleteMethod
-        self.pauseComponent = PauseComponent(self.applicationContext, self, self.cellSize, self.restartMethod, self.deleteMethod)
+        self.pauseComponent = PauseComponent(self.applicationContext, self, self.cellSize, aRestartMethod, aDeleteMethod)
 
         self.tetrisEventNotifier.attachLostEvent(self.pauseComponent.focusRestart)
         self.tetrisEventNotifier.attachLostEvent(self.togglePause)
@@ -136,25 +135,33 @@ class GameComponent(DesktopComponent):
         )
 
     def draw(self, anArea):
+        areaWithoutVanishZone = self.areaWithoutVanishZone(anArea)
+        self.applicationContext.drawText(
+            self.session.user().name(),
+            (255, 255, 255), 22,
+            areaWithoutVanishZone.shifted(0, areaWithoutVanishZone.height + 10)
+        )
+
+        leftOfAreaWithoutVanishZone = areaWithoutVanishZone.shifted(-self.cellSize * 7, 0)
         self.applicationContext.drawText(
             f"Level {self.scoreTracker.level()}",
             (255, 255, 255), 22,
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3)
+            leftOfAreaWithoutVanishZone.shifted(0, self.cellSize * 3)
         )
         self.applicationContext.drawText(
             f"Lines cleared: {self.scoreTracker.lines()}",
             (255, 255, 255), 22,
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 40)
+            leftOfAreaWithoutVanishZone.shifted(0, self.cellSize * 3 + 40)
         )
         self.applicationContext.drawText(
             f"Score: {self.scoreTracker.score()}",
             (255, 255, 255), 22,
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 80)
+            leftOfAreaWithoutVanishZone.shifted(0, self.cellSize * 3 + 80)
         )
         self.applicationContext.drawText(
             f"Time: {self.time.asString()}",
             (255, 255, 255), 22,
-            self.areaWithoutVanishZone(anArea).shifted(-self.cellSize * 7, self.cellSize * 3 + 120)
+            leftOfAreaWithoutVanishZone.shifted(0, self.cellSize * 3 + 120)
         )
 
         self.drawBoard(self.centeredArea(anArea))

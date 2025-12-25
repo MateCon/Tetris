@@ -10,7 +10,10 @@ from tetris_model.kicks import SRSKicks
 from tetris_model.rand import Rand
 from tetris_model.point import Point
 from desktop.game_component import GameComponent
+from server_model.session import Session
+from server_model.user import User
 from abc import abstractmethod
+from datetime import datetime, timedelta
 import pygame
 import threading
 import requests
@@ -63,7 +66,14 @@ class LoginComponent(DesktopComponent):
         if self.hasRegistered:
             try:
                 body = json.loads(self.response)
-                session = body.get("session")
+                sessionDictionary = body.get("session")
+                user = User(sessionDictionary.get("user_name"), "")
+                session = Session(
+                    sessionDictionary.get("id"),
+                    user,
+                    datetime.fromisoformat(sessionDictionary.get("creation_date")),
+                    timedelta(seconds=int(sessionDictionary.get("duration")))
+                )
                 self.playWith(session)
             except Exception:
                 self.hasRegistered = False
@@ -119,7 +129,14 @@ class RegisterComponent(DesktopComponent):
         if self.hasRegistered:
             try:
                 body = json.loads(self.response)
-                session = body.get("session")
+                sessionDictionary = body.get("session")
+                user = User(sessionDictionary.get("user_name"), "")
+                session = Session(
+                    sessionDictionary.get("id"),
+                    user,
+                    datetime.fromisoformat(sessionDictionary.get("creation_date")),
+                    timedelta(seconds=int(sessionDictionary.get("duration")))
+                )
                 self.playWith(session)
             except Exception:
                 self.hasRegistered = False
@@ -519,7 +536,7 @@ class DeviceComponent(DesktopComponent):
         )
 
     def playWith(self, aSession):
-        print(aSession)
+        self.session = aSession
         self.component = self.createGameComponent()
 
     def createGameComponent(self):
@@ -542,7 +559,8 @@ class DeviceComponent(DesktopComponent):
             self.mapGameComponent,
             ColorScheme(),
             self.restartGame,
-            self.deleteGame
+            self.deleteGame,
+            self.session
         )
 
     def deleteGame(self):
@@ -550,7 +568,7 @@ class DeviceComponent(DesktopComponent):
 
     def restartGame(self):
         self.unmap()
-        self.gameComponent = self.createGameComponent()
+        self.component = self.createGameComponent()
 
     def mapKeydown(self, aKey, anAction, fromObject):
         self.applicationContext.inputObserver.addKeydownObserver(fromObject, aKey, self.device, anAction)
