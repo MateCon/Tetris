@@ -85,13 +85,13 @@ class GameComponent(DesktopComponent):
         self.gameActions.hardDrop()
 
     def rotateLeft(self):
-        if self.game.canRotateLeft() and self.game.willLock() and self.infinityCancelCount < 4:
+        if self.game.canRotateLeft() and self.game.willLock() and self.infinityCancelCount < 15:
             self.timeSinceLastTick = 0
             self.infinityCancelCount += 1
         self.gameActions.rotateLeft()
 
     def rotateRight(self):
-        if self.game.canRotateRight() and self.game.willLock() and self.infinityCancelCount < 4:
+        if self.game.canRotateRight() and self.game.willLock() and self.infinityCancelCount < 15:
             self.timeSinceLastTick = 0
             self.infinityCancelCount += 1
         self.gameActions.rotateRight()
