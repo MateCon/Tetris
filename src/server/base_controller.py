@@ -4,10 +4,11 @@ from server_model.auth_service import AuthService
 from server_model.clock import Clock
 from server_model.hash import ArgonHash
 from server_model.id_generator import SecretIdGenerator
+from server_model.result_service import ResultService
 from server_model.user_base import NameTaken, UserBase, UserNotFound, WrongPassword, PasswordTooShort, PasswordTooLong
 from server_model.user import NameTooShort, NameTooLong
 from server_model.session_registry import SessionRegistry
-from server.server_errors import ExpectedBodyParameter, ExpectedJSONDictAsBody
+from server.server_errors import ExpectedBodyParameter, ExpectedQueryParameter, ExpectedJSONDictAsBody
 import json
 
 
@@ -15,9 +16,11 @@ class BaseController:
     def __init__(self, app, aBaseUrl, aDatabase):
         self.app = app
         self.database = aDatabase
-        self.sessionRegistry = SessionRegistry(Clock(), SecretIdGenerator())
+        self.clock = Clock()
+        self.sessionRegistry = SessionRegistry(self.clock, SecretIdGenerator())
         self.userBase = UserBase(self.sessionRegistry, ArgonHash())
         self.authService = AuthService(self.database, self.userBase, self.sessionRegistry)
+        self.resultService = ResultService(self.database, self.authService, self.clock)
 
         self.app.add_url_rule(aBaseUrl + "", view_func=self.hello_world)
         self.app.add_url_rule(aBaseUrl + "register", view_func=self.register, methods=["POST"])
@@ -30,6 +33,8 @@ class BaseController:
         self.app.add_url_rule(aBaseUrl + "login", view_func=self.login, methods=["POST"])
         self.app.register_error_handler(UserNotFound, self.userNotFoundHandler)
         self.app.register_error_handler(WrongPassword, self.wrongPasswordHandler)
+
+        self.app.add_url_rule(aBaseUrl + "result", view_func=self.result, methods=["POST"])
 
     def hello_world(self):
         return "Hello, World!!"
@@ -69,6 +74,37 @@ class BaseController:
         session = self.authService.login(name, password)
 
         return json.dumps(SessionSerializer(session).serialize())
+
+    def result(self):
+        sessionId = request.args.get("session")
+        if not sessionId:
+            raise ExpectedQueryParameter("session")
+
+        body = request.get_json(silent=True)
+
+        if not isinstance(body, dict):
+            raise ExpectedJSONDictAsBody
+        print(body)
+
+        score = body.get("score")
+        if score is None:
+            raise ExpectedBodyParameter("score")
+
+        level = body.get("level")
+        if level is None:
+            raise ExpectedBodyParameter("level")
+
+        lines = body.get("lines")
+        if lines is None:
+            raise ExpectedBodyParameter("lines")
+
+        time = body.get("time")
+        if time is None:
+            raise ExpectedBodyParameter("time")
+
+        self.resultService.save(sessionId, score, level, lines, time)
+
+        return "Time saved"
 
     def nameTakenHandler(self, error):
         return "Name already taken, pick another one", 400

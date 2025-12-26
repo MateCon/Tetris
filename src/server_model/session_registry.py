@@ -20,6 +20,16 @@ class SessionRegistry:
                 return
         raise SessionNotFound
 
+    def verifyWith(self, aSessionId, aSessionRepository):
+        session = aSessionRepository.find(aSessionId)
+        if session is None:
+            raise SessionNotFound
+        if self._clock.now() >= session.expirationDate():
+            raise SessionExpired
+
+    def load(self, aSession):
+        self._sessions.append(aSession)
+
     def size(self):
         return len(self._sessions)
 

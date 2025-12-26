@@ -74,3 +74,9 @@ class Time:
 
         return f"{self.days}:{hoursString}:{minutesString}:{secondsString}"
 
+    def totalMilliseconds(self):
+        totalMilliseconds = self.days
+        totalMilliseconds = totalMilliseconds * 24 + self.hours
+        totalMilliseconds = totalMilliseconds * 60 + self.minutes
+        totalMilliseconds = totalMilliseconds * 60 + self.seconds
+        return totalMilliseconds * 1000 + self.milliseconds

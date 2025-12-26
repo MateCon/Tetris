@@ -7,6 +7,8 @@ from desktop.game_actions import RunningGameActions
 from desktop.pause_component import PauseComponent
 from tetris_model.game_score import GameScore
 from tetris_model.time import Time
+import threading
+import requests
 
 
 class GameComponent(DesktopComponent):
@@ -39,6 +41,7 @@ class GameComponent(DesktopComponent):
 
         self.tetrisEventNotifier.attachLostEvent(self.pauseComponent.focusRestart)
         self.tetrisEventNotifier.attachLostEvent(self.togglePause)
+        self.tetrisEventNotifier.attachLostEvent(self.saveResult)
 
         self.time = Time.fromMilliseconds(0)
 
@@ -236,3 +239,19 @@ class GameComponent(DesktopComponent):
 
     def destroy(self):
         self.applicationContext.inputObservers.removeFrom(self)
+
+    def saveResult(self):
+        def submitResult():
+            body = {
+                "score": self.scoreTracker.score(),
+                "level": self.scoreTracker.level(),
+                "lines": self.scoreTracker.lines(),
+                "time": self.time.totalMilliseconds()
+            }
+            requests.post(f"https://127.0.0.1:5000/result?session={self.session.id()}", json=body, verify=False)
+
+        threading.Thread(
+            target=lambda: submitResult(),
+            daemon=True
+        ).start()
+

@@ -2,6 +2,7 @@ import psycopg
 from psycopg_pool import ConnectionPool
 from server.user_repository import PostgresUserRepository
 from server.session_repository import PostgresSessionRepository
+from server.result_repository import PostgresResultRepository
 from server_model.database import Database
 
 
@@ -21,3 +22,6 @@ class PostgresDatabase(Database):
 
     def sessionRepository(self):
         return PostgresSessionRepository(self)
+
+    def resultRepository(self):
+        return PostgresResultRepository(self)

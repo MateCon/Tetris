@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from server_model.session_registry import SessionNotFound
 from server_model.user import User
+from server_model.session import Session
 
 
 class UserRepository(ABC):
@@ -44,7 +46,7 @@ class MockUserRepository(UserRepository):
 
 class SessionRepository(ABC):
     @abstractmethod
-    def insert(self, aUser) -> None:
+    def insert(self, aSession) -> None:
         pass
 
 
@@ -53,9 +55,15 @@ class MockSessionRepository(SessionRepository):
         self._sessions = []
         self._hasToFail = False
 
-    def insert(self, aUser):
+    def insert(self, aSession):
         self.checkForFailure()
-        self._sessions.append(aUser)
+        self._sessions.append(aSession)
+
+    def find(self, anId):
+        for session in self._sessions:
+            if session.id() == anId:
+                return session
+        return None
 
     def includes(self, anId):
         for session in self._sessions:
@@ -78,6 +86,27 @@ class MockSessionRepository(SessionRepository):
             raise Exception
 
 
+class ResultRepository(ABC):
+    @abstractmethod
+    def insert(self, aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds) -> None:
+        pass
+
+
+class MockResultRepository(ResultRepository):
+    def __init__(self):
+        self._results = []
+
+    def insert(self, aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds):
+        self._results.append((aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds))
+
+    def includes(self, aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds):
+        for result in self._results:
+            if result[0] == aUserName and result[1] == aScore and result[2] == aLevel and result[3] == anAmmountOfLines and result[4] == aCreationDate and result[5] == aTimeInMilliseconds:
+                return True
+        return False
+
+
+
 class Database(ABC):
     @abstractmethod
     def userRepository(self) -> UserRepository:
@@ -87,14 +116,22 @@ class Database(ABC):
     def sessionRepository(self) -> SessionRepository:
         pass
 
+    @abstractmethod
+    def resultRepository(self) -> ResultRepository:
+        pass
+
 
 class MockDatabase(Database):
     def __init__(self):
         self._userRepository = MockUserRepository()
         self._sessionRepository = MockSessionRepository()
+        self._resultRepository = MockResultRepository()
 
     def userRepository(self):
         return self._userRepository
 
     def sessionRepository(self):
         return self._sessionRepository
+
+    def resultRepository(self):
+        return self._resultRepository

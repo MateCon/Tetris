@@ -78,3 +78,9 @@ class TestTime:
         time = time1 + time2
 
         assert time.asString() == "2:00:00:01"
+
+    def test13_TimeIsGivenAsMilliseconds(self):
+        almostTwoDays = ((1000 * 60 * 60 * 24) * 2) - 1
+        time = Time.fromMilliseconds(almostTwoDays)
+
+        assert time.totalMilliseconds() == almostTwoDays

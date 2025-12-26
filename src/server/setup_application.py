@@ -15,5 +15,8 @@ class SetupFlaskApplication:
     def expectedBodyParameterHandler(self, error: ExpectedBodyParameter):
         return f"Expected body parameter {error.parameter}", 400
 
+    def expectedQueryParameterHandler(self, error: ExpectedBodyParameter):
+        return f"Expected query parameter {error.parameter}", 400
+
     def expectedJSONDictASBodyHandler(self, error: ExpectedBodyParameter):
         return "Expected the body to be a JSON dictionary", 400

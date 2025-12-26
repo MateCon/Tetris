@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-db = PostgresDatabase(os.getenv("DB_CONNECTION_STRING"))
+db = PostgresDatabase(os.getenv("DATABASE_URL"))
 SetupFlaskApplication(app, db).setup()
 
 

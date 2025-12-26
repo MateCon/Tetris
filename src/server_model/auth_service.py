@@ -38,3 +38,7 @@ class AuthService:
             raise
 
         return session
+
+    def verifySession(self, aSessionId):
+        self.sessionRegistry.verifyWith(aSessionId, self.database.sessionRepository())
+
