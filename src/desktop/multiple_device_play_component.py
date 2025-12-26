@@ -3,6 +3,7 @@ from desktop.desktop_component import DesktopComponent
 from desktop.area import Area
 from desktop.color_scheme import ColorScheme
 from desktop.held_command_repeater import HeldCommandRepeater
+from server.session_serialization import SessionDeserializer
 from tetris_model.tetris_event_notifier import TetrisEventNotifier
 from tetris_model.tetris_game import TetrisGame
 from tetris_model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator, SuperRotationListGenerator
@@ -65,15 +66,7 @@ class LoginComponent(DesktopComponent):
 
         if self.hasRegistered:
             try:
-                body = json.loads(self.response)
-                sessionDictionary = body.get("session")
-                user = User(sessionDictionary.get("user_name"), "")
-                session = Session(
-                    sessionDictionary.get("id"),
-                    user,
-                    datetime.fromisoformat(sessionDictionary.get("creation_date")),
-                    timedelta(seconds=int(sessionDictionary.get("duration")))
-                )
+                session = SessionDeserializer(json.loads(self.response)).deserialize()
                 self.applicationContext.savedSessions.add(session)
                 self.playWith(session)
             except Exception:
@@ -129,15 +122,7 @@ class RegisterComponent(DesktopComponent):
 
         if self.hasRegistered:
             try:
-                body = json.loads(self.response)
-                sessionDictionary = body.get("session")
-                user = User(sessionDictionary.get("user_name"), "")
-                session = Session(
-                    sessionDictionary.get("id"),
-                    user,
-                    datetime.fromisoformat(sessionDictionary.get("creation_date")),
-                    timedelta(seconds=int(sessionDictionary.get("duration")))
-                )
+                session = SessionDeserializer(json.loads(self.response)).deserialize()
                 self.applicationContext.savedSessions.add(session)
                 self.playWith(session)
             except Exception:
@@ -352,6 +337,7 @@ class ButtonComponent(InputComponent):
         self.action = anAction
         self.focused = False
         self.enabled = True
+        self.failed = False
 
     def focus(self):
         self.focused = True
@@ -369,6 +355,9 @@ class ButtonComponent(InputComponent):
     def enable(self):
         self.enabled = True
 
+    def fail(self):
+        self.failed = True
+
     def draw(self, anArea):
         if self.focused:
             textColor = (0, 0, 0)
@@ -378,6 +367,10 @@ class ButtonComponent(InputComponent):
         else:
             textColor = (255, 255, 255)
             rectColor = (0, 0, 0)
+
+        if self.failed:
+            textColor = (255, 0, 0)
+
         self.applicationContext.drawArea(rectColor, anArea)
         self.applicationContext.drawText(self.name, textColor, 24, anArea.withPadding(20, 0))
 
@@ -472,7 +465,12 @@ class UserSelectMenuComponent(DesktopComponent):
         self.form = FormComponent(anApplicationContext, "Select User", self.buttons, aKeybindMapper, anExitFunction)
 
     def loginWithSession(self, aSession):
-        self.playWith(aSession)
+        if self.applicationContext.savedSessions.isUsing(aSession):
+            for button in self.buttons:
+                if button.name == aSession.user().name():
+                    button.fail()
+        else:
+            self.playWith(aSession)
 
     def draw(self, anArea):
         self.form.draw(anArea)
@@ -531,6 +529,9 @@ class UserSelectComponent(DesktopComponent):
     def update(self, millisecondsSinceLastUpdate):
         self.component.update(millisecondsSinceLastUpdate)
 
+    def destroy(self):
+        self.component.destroy()
+
 
 class DeviceComponent(DesktopComponent):
     def __init__(self, anApplicationContext, aDevice, aDeletionFunction):
@@ -541,6 +542,7 @@ class DeviceComponent(DesktopComponent):
         self.cols = 10
         self.cellSize = 25
         self.component = self.createUserSelectComponent()
+        self.session = None
 
     def createUserSelectComponent(self):
         return UserSelectComponent(
@@ -555,6 +557,8 @@ class DeviceComponent(DesktopComponent):
 
     def playWith(self, aSession):
         self.session = aSession
+        self.applicationContext.savedSessions.using(self.session)
+        self.component.destroy()
         self.component = self.createGameComponent()
 
     def createGameComponent(self):
@@ -603,6 +607,8 @@ class DeviceComponent(DesktopComponent):
 
     def destroy(self):
         self.unmap()
+        if self.session is not None:
+            self.applicationContext.savedSessions.stopUsing(self.session)
 
     def mapUserSelectComponent(self, aUserSelectComponent):
         if self.device == 100:
@@ -627,6 +633,28 @@ class DeviceComponent(DesktopComponent):
             self.mapKeydown(pygame.K_RETURN, aUserSelectComponent.accept, aUserSelectComponent)
             self.mapKeydown(pygame.K_SPACE, aUserSelectComponent.accept, aUserSelectComponent)
             self.mapKeydown(pygame.K_ESCAPE, aUserSelectComponent.exit, aUserSelectComponent)
+        else:
+            self.mapKeydown("JOYSTICK_LEFT_STICK_UP", aUserSelectComponent.startMovingUp, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_HAT_UP", aUserSelectComponent.startMovingUp, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_LEFT_STICK_DOWN", aUserSelectComponent.startMovingDown, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_HAT_DOWN", aUserSelectComponent.startMovingDown, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_LEFT_STICK_LEFT", aUserSelectComponent.startMovingLeft, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_HAT_LEFT", aUserSelectComponent.startMovingLeft, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_LEFT_STICK_RIGHT", aUserSelectComponent.startMovingRight, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_HAT_RIGHT", aUserSelectComponent.startMovingRight, aUserSelectComponent)
+
+            self.mapKeyup("JOYSTICK_LEFT_STICK_UP", aUserSelectComponent.stopMovingUp, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_HAT_UP", aUserSelectComponent.stopMovingUp, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_LEFT_STICK_DOWN", aUserSelectComponent.stopMovingDown, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_HAT_DOWN", aUserSelectComponent.stopMovingDown, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_LEFT_STICK_LEFT", aUserSelectComponent.stopMovingLeft, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_HAT_LEFT", aUserSelectComponent.stopMovingLeft, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_LEFT_STICK_RIGHT", aUserSelectComponent.stopMovingRight, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_HAT_RIGHT", aUserSelectComponent.stopMovingRight, aUserSelectComponent)
+
+            self.mapKeydown("JOYSTICK_CROSS", aUserSelectComponent.accept, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_RIGHT_BUMPER", aUserSelectComponent.accept, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_CIRCLE", aUserSelectComponent.exit, aUserSelectComponent)
 
     def mapGameComponent(self, aGameComponent):
         if self.device == 100:

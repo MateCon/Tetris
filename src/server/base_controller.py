@@ -1,4 +1,5 @@
 from flask import request
+from server.session_serialization import SessionSerializer
 from server_model.auth_service import AuthService
 from server_model.clock import Clock
 from server_model.hash import ArgonHash
@@ -33,16 +34,6 @@ class BaseController:
     def hello_world(self):
         return "Hello, World!!"
 
-    def sessionToJsonResult(self, aSession):
-        return json.dumps({
-            "session": {
-                "id": aSession.id(),
-                "user_name": aSession.user().name(),
-                "creation_date": aSession.expirationDate().isoformat(),
-                "duration": aSession.duration().total_seconds()
-            }
-        })
-
     def register(self):
         body = request.get_json(silent=True)
 
@@ -59,7 +50,7 @@ class BaseController:
 
         session = self.authService.register(name, password)
 
-        return self.sessionToJsonResult(session)
+        return json.dumps(SessionSerializer(session).serialize())
 
     def login(self):
         body = request.get_json(silent=True)
@@ -77,7 +68,7 @@ class BaseController:
 
         session = self.authService.login(name, password)
 
-        return self.sessionToJsonResult(session)
+        return json.dumps(SessionSerializer(session).serialize())
 
     def nameTakenHandler(self, error):
         return "Name already taken, pick another one", 400

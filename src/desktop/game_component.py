@@ -25,8 +25,8 @@ class GameComponent(DesktopComponent):
         self.nextPieceDisplayComponent = NextPieceDisplayComponent(self.applicationContext, self, self.nextSixPieces(), self.cellSize, self.colorScheme)
         self.heldPieceDisplayComponent = HeldPieceDisplayComponent(self.applicationContext, self, self.getHeldPiece(), self.cellSize, self.colorScheme)
 
-        self.leftCommandRepeater = HeldCommandRepeater(self.game.moveLeft, 167, 33)
-        self.rightCommandRepeater = HeldCommandRepeater(self.game.moveRight, 167, 33)
+        self.leftCommandRepeater = HeldCommandRepeater(self.moveLeft, 167, 33)
+        self.rightCommandRepeater = HeldCommandRepeater(self.moveRight, 167, 33)
         self.dropCommandRepeater = HeldCommandRepeater(self.game.softDrop, 50, 33)
 
         self.gameActions = RunningGameActions(self, self.game)
@@ -42,7 +42,13 @@ class GameComponent(DesktopComponent):
 
         self.time = Time.fromMilliseconds(0)
 
+        self.infinityCancelCount = 0
+        self.hasLockDelay = True
+        self.lockDelayFrames = 8
+        self.hasInfinity = True
+
     def tick(self):
+        self.infinityCancelCount = 0
         self.gameActions.tick()
 
     def startMovingLeft(self):
@@ -50,6 +56,18 @@ class GameComponent(DesktopComponent):
 
     def stopMovingLeft(self):
         self.gameActions.stopMovingLeft()
+
+    def moveLeft(self):
+        if self.game.canMoveLeft() and self.game.willLock() and self.hasInfinity and self.infinityCancelCount < 15:
+            self.timeSinceLastTick = 0
+            self.infinityCancelCount += 1
+        self.game.moveLeft()
+
+    def moveRight(self):
+        if self.game.canMoveRight() and self.game.willLock() and self.hasInfinity and self.infinityCancelCount < 15:
+            self.timeSinceLastTick = 0
+            self.infinityCancelCount += 1
+        self.game.moveRight()
 
     def startMovingRight(self):
         self.gameActions.startMovingRight()
@@ -67,9 +85,15 @@ class GameComponent(DesktopComponent):
         self.gameActions.hardDrop()
 
     def rotateLeft(self):
+        if self.game.canRotateLeft() and self.game.willLock() and self.infinityCancelCount < 4:
+            self.timeSinceLastTick = 0
+            self.infinityCancelCount += 1
         self.gameActions.rotateLeft()
 
     def rotateRight(self):
+        if self.game.canRotateRight() and self.game.willLock() and self.infinityCancelCount < 4:
+            self.timeSinceLastTick = 0
+            self.infinityCancelCount += 1
         self.gameActions.rotateRight()
 
     def hold(self):
@@ -142,14 +166,14 @@ class GameComponent(DesktopComponent):
             areaWithoutVanishZone.shifted(0, areaWithoutVanishZone.height + 10)
         )
 
-        leftOfAreaWithoutVanishZone = areaWithoutVanishZone.shifted(-self.cellSize * 7, 0)
+        leftOfAreaWithoutVanishZone = areaWithoutVanishZone.shifted(-self.cellSize * 5.5, 0)
         self.applicationContext.drawText(
             f"Level {self.scoreTracker.level()}",
             (255, 255, 255), 22,
             leftOfAreaWithoutVanishZone.shifted(0, self.cellSize * 3)
         )
         self.applicationContext.drawText(
-            f"Lines cleared: {self.scoreTracker.lines()}",
+            f"Lines: {self.scoreTracker.lines()}",
             (255, 255, 255), 22,
             leftOfAreaWithoutVanishZone.shifted(0, self.cellSize * 3 + 40)
         )
@@ -172,7 +196,7 @@ class GameComponent(DesktopComponent):
         )
         self.heldPieceDisplayComponent.draw(
             self.centeredArea(anArea)
-                .shifted(-self.cellSize * 8, 0)
+                .shifted(-self.cellSize * 6.5, 0)
         )
 
         if self.isPaused():
@@ -182,12 +206,15 @@ class GameComponent(DesktopComponent):
         return self.game.getNextSix()
 
     def timeToSoftDrop(self):
+        if self.game.willLock() and self.hasLockDelay:
+            return self.lockDelayFrames * (1000/60)
+
         gavityTable = [ 0.01667, 0.021017, 0.026977, 0.035256, 0.04693,
                         0.06361, 0.0879, 0.1236, 0.1775, 0.2598,
                         0.388, 0.59, 0.92, 1.46, 2.36,
                         3.91 , 6.61, 11.43, 20.3 ]
         level = self.scoreTracker.level()
-        gravity = gavityTable[min(level, len(gavityTable) - 1)]
+        gravity = gavityTable[min(level, len(gavityTable)) - 1]
         return 1000/(60*gravity)
 
     def update(self, millisecondsSinceLastUpdate):
@@ -206,3 +233,6 @@ class GameComponent(DesktopComponent):
 
         if not self.isPaused() and not self.pauseComponent.lost():
             self.time = self.time + Time.fromMilliseconds(millisecondsSinceLastUpdate)
+
+    def destroy(self):
+        self.applicationContext.inputObservers.removeFrom(self)

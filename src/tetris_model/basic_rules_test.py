@@ -634,7 +634,7 @@ class TestBasicRules:
             "......oo..",
         ]
 
-    def test42_HoldRightAfterFirstHold(self):
+    def test43_HoldRightAfterFirstHold(self):
         random = RandStub([4, 1])
         game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks)
 
@@ -642,3 +642,73 @@ class TestBasicRules:
         game.hold()
 
         assert game.getHeldPiece().activeCharacter() == "I"
+
+    def test44_GameCanPredictIfTheNextMoveWillLockThePiece(self):
+        random = RandStub([4])
+        game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks)
+
+        game.tick()
+
+        assert game.willLock()
+
+    def test45_GameCanPredictIfTheNextMoveWillNotLockThePiece(self):
+        random = RandStub([4])
+        game = TetrisGame(10, 1, random, NintendoRotationListGenerator, NoKicks)
+
+        assert not game.willLock()
+
+    def test46_GameCanPredictIfARightMoveWillChangeTheGameState(self):
+        random = RandStub([4])
+        game = TetrisGame(4, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        assert game.canMoveRight()
+
+    def test47_GameCanPredictIfARightMoveWillNotChangeTheGameState(self):
+        random = RandStub([4])
+        game = TetrisGame(2, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        assert not game.canMoveRight()
+
+    def test48_GameCanPredictIfLeftMoveWillChangeTheGameState(self):
+        random = RandStub([4])
+        game = TetrisGame(4, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        assert game.canMoveLeft()
+
+    def test49_GameCanPredictIfLeftMoveWillNotChangeTheGameState(self):
+        random = RandStub([4])
+        game = TetrisGame(3, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        assert not game.canMoveLeft()
+
+    def test50_GameCanPredictIfLeftRotationWillChangeTheGameState(self):
+        random = RandStub([1])
+        game = TetrisGame(4, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        assert game.canRotateLeft()
+
+    def test51_GameCanPredictIfLeftRotationWillNotChangeTheGameState(self):
+        random = RandStub([7])
+        game = TetrisGame(4, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        game.rotateRight()
+        game.moveRight()
+        game.moveRight()
+
+        assert not game.canRotateLeft()
+
+    def test52_GameCanPredictIfRightRotationWillChangeTheGameState(self):
+        random = RandStub([1])
+        game = TetrisGame(4, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        assert game.canRotateRight()
+
+    def test53_GameCanPredictIfLeftRotationWillNotChangeTheGameState(self):
+        random = RandStub([7])
+        game = TetrisGame(4, 0, random, NintendoRotationListGenerator, NoKicks)
+
+        game.rotateLeft()
+        game.moveLeft()
+        game.moveLeft()
+
+        assert not game.canRotateRight()

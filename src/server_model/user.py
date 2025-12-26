@@ -1,5 +1,5 @@
 class User:
-    def __init__(self, aName, aHashedPassword):
+    def __init__(self, aName, aHashedPassword=""):
         self.assertNameIsNotTooLong(aName)
         self.assertNameIsNotTooShort(aName)
         self.assertHashedPasswordIsNotTooLong(aHashedPassword)

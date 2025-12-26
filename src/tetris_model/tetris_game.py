@@ -134,6 +134,21 @@ class TetrisGame:
             self.canHoldPiece = False
         self.resetSpins()
 
+    def willLock(self):
+        return not self.currentPiece.canMove(Point(0, -1))
+
+    def canMoveRight(self):
+        return self.currentPiece.canMove(Point(1, 0))
+
+    def canMoveLeft(self):
+        return self.currentPiece.canMove(Point(-1, 0))
+
+    def canRotateRight(self):
+        return self.currentPiece.canRotateRight()
+
+    def canRotateLeft(self):
+        return self.currentPiece.canRotateLeft()
+
     def getHeldPiece(self):
         return self.pieceHeld
 

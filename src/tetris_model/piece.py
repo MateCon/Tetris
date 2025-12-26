@@ -60,12 +60,18 @@ class Piece:
 
         self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheRight(), rotateRightWithOffset, self.rotationList.position(), self.rotationList.positionToTheRight())
 
+    def canRotateRight(self):
+        return self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheRight(), lambda _: None, self.rotationList.position(), self.rotationList.positionToTheRight())
+
     def rotateLeft(self):
         def rotateLeftWithOffset(anOffset):
             self.position = self.position + anOffset
             self.rotationList.rotateLeft()
 
         self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheLeft(), rotateLeftWithOffset, self.rotationList.position(), self.rotationList.positionToTheLeft())
+
+    def canRotateLeft(self):
+        return self.kickAlgoritm.rotate(self, self.rotationList.shapeToTheLeft(), lambda _: None, self.rotationList.position(), self.rotationList.positionToTheRight())
 
     def asStringList(self):
         if self.activeCharacter() == "I":
@@ -119,6 +125,9 @@ class NoPiece:  # pragma: no cover
     def anySatisfy(self, aCallback):
         return False
 
+    def canMove(self, anOffset):
+        return False
+
     def moveIfCanMoveIfCantMove(self, anOffset, aHandlerWhenCanMove, aHandlerWhenCantMove):
         pass
 
@@ -145,6 +154,12 @@ class NoPiece:  # pragma: no cover
 
     def rotateLeft(self):
         pass
+
+    def canRotateRight(self):
+        return False
+
+    def canRotateLeft(self):
+        return False
 
     def asStringList(self):
         return []

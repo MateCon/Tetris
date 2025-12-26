@@ -4,7 +4,7 @@ from tetris_model.point import Point
 
 class WallKickSystem(ABC):
     @abstractmethod
-    def rotate(self, aPiece, itsNewShape, rotateWithOffset, position, newPosition):
+    def rotate(self, aPiece, itsNewShape, rotateWithOffset, position, newPosition) -> bool:
         pass
 
 
@@ -16,6 +16,8 @@ class NoKicks(WallKickSystem):
         origin = Point(0, 0)
         if aPiece.canRotate(itsNewShape, origin):
             rotateWithOffset(origin)
+            return True
+        return False
 
 
 class ARSKicks(WallKickSystem):
@@ -44,7 +46,8 @@ class ARSKicks(WallKickSystem):
         for offset in offsets:
             if aPiece.canRotate(itsNewShape, offset) and not self.centerColumnRule(aPiece, itsNewShape, offset):
                 rotateWithOffset(offset)
-                return
+                return True
+        return False
 
 
 class SRSKicks(WallKickSystem):
@@ -91,6 +94,5 @@ class SRSKicks(WallKickSystem):
         for offset in offsets:
             if aPiece.canRotate(itsNewShape, offset):
                 rotateWithOffset(offset)
-                return
-
-
+                return True
+        return False
