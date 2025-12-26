@@ -1,6 +1,5 @@
 Flask
 argon2-cffi
-psycopg
-psycopg[pool]
+psycopg[binary,pool]
 python-dotenv
 gunicorn
