@@ -3,3 +3,4 @@ argon2-cffi
 psycopg
 psycopg[pool]
 python-dotenv
+gunicorn
