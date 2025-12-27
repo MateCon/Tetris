@@ -1,80 +1,60 @@
 from desktop.desktop_component import DesktopComponent
-import pygame
+from desktop.form_component import FormComponent, NoFormComponent, ButtonComponent
 
 
 class PauseComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aGameComponent, aCellSize, aRestartMethod, aDeleteMethod):
+    def __init__(self, anApplicationContext, aGameComponent, aCellSize, aRestartMethod, aDeleteMethod, aKeybindMapper):
         self.applicationContext = anApplicationContext
         self.gameComponent = aGameComponent
         self.cellSize = aCellSize
         self.restartMethod = aRestartMethod
         self.deleteMethod = aDeleteMethod
-        self.currentOptionIndex = 0
-        self.options = [("Resume", self.resume), ("Restart", self.restart), ("Remove Device", self.removeDevice), ("Exit", self.exit)]
-        self.hasLost = False
-        self.gameComponent.tetrisEventNotifier.attachLostEvent(self.onLost)
+        self.keybindMapper = aKeybindMapper
 
-    def accept(self):
-        self.options[self.currentOptionIndex][1]()
+        self.resumeButton = ButtonComponent(anApplicationContext, "Resume", self.resume)
+        self.restartButton = ButtonComponent(anApplicationContext, "Restart", self.restart)
+        self.removeDeviceButton = ButtonComponent(anApplicationContext, "Remove Device", self.removeDevice)
+        self.exitButton = ButtonComponent(anApplicationContext, "Exit", self.applicationContext.exit)
+        self.buttons = [
+            self.resumeButton,
+            self.restartButton,
+            self.removeDeviceButton,
+            self.exitButton
+        ]
+        self.gameComponent.tetrisEventNotifier.attachLostEvent(self.createLostForm)
+        self.form = NoFormComponent(anApplicationContext)
+        self.hasLost = False
+
+    def createPausedForm(self):
+        self.form = FormComponent(self.applicationContext, "Paused", self.buttons, self.keybindMapper, lambda: None)
+        self.form.focus(self.resumeButton)
+
+    def createLostForm(self):
+        self.form = FormComponent(self.applicationContext, "Lost", self.buttons, self.keybindMapper, lambda: None)
+        self.form.focus(self.restartButton)
+        self.hasLost = True
 
     def resume(self):
         self.gameComponent.togglePause()
+        self.form.destroy()
+        self.form = NoFormComponent(self.applicationContext)
 
     def restart(self):
+        self.gameComponent.togglePause()
+        self.form.destroy()
+        self.form = NoFormComponent(self.applicationContext)
+        self.hasLost = False
         self.restartMethod()
 
     def removeDevice(self):
+        self.form.destroy()
         self.deleteMethod()
-
-    def exit(self):
-        self.applicationContext.exit()
-
-    def moveDown(self):
-        self.currentOptionIndex += 1
-        self.currentOptionIndex = self.currentOptionIndex % len(self.options)
-
-    def moveUp(self):
-        self.currentOptionIndex -= 1
-        self.currentOptionIndex = self.currentOptionIndex % len(self.options)
-
-    def focusRestart(self):
-        for index, (text, action) in enumerate(self.options):
-            if text == "Restart":
-                self.currentOptionIndex = index
-
-    def onLost(self):
-        self.hasLost = True
 
     def lost(self):
         return self.hasLost
 
     def draw(self, anArea):
-        currentArea = anArea.copy().shifted(0, self.cellSize * 7)
-        totalArea = currentArea
-        currentArea.height = 40
-        textXOffset = anArea.width / 2 - 65
-        title = "Paused"
-        if self.hasLost:
-            title = "LOST"
-        self.applicationContext.drawArea((0, 0, 0), currentArea)
-        self.applicationContext.drawText(title, (255, 255, 255), 38, currentArea.shifted(textXOffset, 0))
-        currentArea = currentArea.shifted(0, 40)
-        currentArea.height = 30
-        for index, (text, action) in enumerate(self.options):
-            if index == self.currentOptionIndex:
-                textColor = (0, 0, 0)
-                rectColor = (255, 255, 255)
-            else:
-                textColor = (255, 255, 255)
-                rectColor = (0, 0, 0)
-            self.applicationContext.drawArea(rectColor, currentArea)
-            self.applicationContext.drawText(text, textColor, 24, currentArea.shifted(textXOffset, 0))
-            currentArea = currentArea.shifted(0, 30)
-        totalArea.height = currentArea.y - totalArea.y
-        self.backgroundColor = (0, 0, 0)
-        self.borderWidth = 2
-        self.borderColor = (255, 255, 255)
-        self.drawBorderAround(totalArea)
+        self.form.draw(anArea)
 
     def update(self, millisecondsSinceLastUpdate):
-        pass
+        self.form.update(millisecondsSinceLastUpdate)

@@ -1,536 +1,14 @@
-from pygame.joystick import Joystick
 from desktop.desktop_component import DesktopComponent
 from desktop.area import Area
 from desktop.color_scheme import ColorScheme
-from desktop.held_command_repeater import HeldCommandRepeater
-from server.session_serialization import SessionDeserializer
 from tetris_model.tetris_event_notifier import TetrisEventNotifier
 from tetris_model.tetris_game import TetrisGame
-from tetris_model.rotation_list_generator import NintendoRotationListGenerator, SegaRotationListGenerator, SuperRotationListGenerator
+from tetris_model.rotation_list_generator import SuperRotationListGenerator
 from tetris_model.kicks import SRSKicks
 from tetris_model.rand import Rand
-from tetris_model.point import Point
 from desktop.game_component import GameComponent
-from server_model.session import Session
-from server_model.user import User
-from abc import abstractmethod
-from datetime import datetime, timedelta
+from desktop.user_select import UserSelectComponent
 import pygame
-import threading
-import requests
-import json
-
-
-class LoginComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aPlayWithFunction, anExitFunction):
-        self.cellSize = aCellSize
-        self.applicationContext = anApplicationContext
-        self.playWith = aPlayWithFunction
-
-        self.nameInput = TextInputComponent(anApplicationContext, "Name")
-        self.passwordInput = TextInputComponent(anApplicationContext, "Password")
-        self.submitButton = ButtonComponent(anApplicationContext, "Submit", self.submit)
-        self.inputs = [self.nameInput, self.passwordInput, self.submitButton]
-        self.form = FormComponent(anApplicationContext, "Login", self.inputs, aKeybindMapper, anExitFunction)
-        self.response = ""
-        self.hasRegistered = False
-        self.errorHappened = False
-
-    def submit(self):
-        name = self.nameInput.value()
-        password = self.passwordInput.value()
-        self.submitButton.disable()
-
-        threading.Thread(
-            target=lambda: self.login(name, password),
-            daemon=True
-        ).start()
-
-    def login(self, aName, aPassword):
-        body = {
-            "name": aName,
-            "password": aPassword
-        }
-        response = requests.post("https://127.0.0.1:5000/login", json=body, verify=False)
-        self.response = response.content
-        self.hasRegistered = True
-        self.submitButton.enable()
-
-    def draw(self, anArea):
-        self.form.draw(anArea)
-        if self.errorHappened:
-            self.applicationContext.drawText(self.response, (255, 255, 255), 22, anArea.shifted(20, 200))
-
-    def update(self, millisecondsSinceLastUpdate):
-        self.form.update(millisecondsSinceLastUpdate)
-
-        if self.hasRegistered:
-            try:
-                session = SessionDeserializer(json.loads(self.response)).deserialize()
-                self.applicationContext.savedSessions.add(session)
-                self.playWith(session)
-            except Exception:
-                self.hasRegistered = False
-                self.errorHappened = True
-
-    def destroy(self):
-        self.form.destroy()
-
-
-class RegisterComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aPlayWithFunction, anExitFunction):
-        self.cellSize = aCellSize
-        self.applicationContext = anApplicationContext
-        self.playWith = aPlayWithFunction
-
-        self.nameInput = TextInputComponent(anApplicationContext, "Name")
-        self.passwordInput = TextInputComponent(anApplicationContext, "Password")
-        self.submitButton = ButtonComponent(anApplicationContext, "Submit", self.submit)
-        self.inputs = [self.nameInput, self.passwordInput, self.submitButton]
-        self.form = FormComponent(anApplicationContext, "Register", self.inputs, aKeybindMapper, anExitFunction)
-        self.response = ""
-        self.hasRegistered = False
-        self.errorHappened = False
-
-    def submit(self):
-        name = self.nameInput.value()
-        password = self.passwordInput.value()
-        self.submitButton.disable()
-
-        threading.Thread(
-            target=lambda: self.register(name, password),
-            daemon=True
-        ).start()
-
-    def register(self, aName, aPassword):
-        body = {
-            "name": aName,
-            "password": aPassword
-        }
-        response = requests.post("https://127.0.0.1:5000/register", json=body, verify=False)
-        self.response = response.content
-        self.hasRegistered = True
-        self.submitButton.enable()
-
-    def draw(self, anArea):
-        self.form.draw(anArea)
-        if self.errorHappened:
-            self.applicationContext.drawText(self.response, (255, 255, 255), 22, anArea.shifted(20, 200))
-
-    def update(self, millisecondsSinceLastUpdate):
-        self.form.update(millisecondsSinceLastUpdate)
-
-        if self.hasRegistered:
-            try:
-                session = SessionDeserializer(json.loads(self.response)).deserialize()
-                self.applicationContext.savedSessions.add(session)
-                self.playWith(session)
-            except Exception:
-                self.hasRegistered = False
-                self.errorHappened = True
-
-    def destroy(self):
-        self.form.destroy()
-
-
-
-class VirtualKeyboardComponent(DesktopComponent):
-    def __init__(self, anApplicationContext):
-        super().__init__(anApplicationContext)
-        self._isOpen = False
-        self.borderWidth = 2
-        self.keys = [
-            ["1","2","3","4","5","6","7","8","9","0"],
-            ["q","w","e","r","t","y","u","i","o","p"],
-            ["a","s","d","f","g","h","j","k","l", "<"],
-            ["z","x","c","v","b","n","m", "accept"]
-        ]
-        self.position = Point(0, 2)
-
-    def isOpen(self):
-        return self._isOpen
-
-    def openWith(self, anInput):
-        self.position = Point(0, 2)
-        self._isOpen = True
-        self._input = anInput
-
-    def close(self):
-        self._isOpen = False
-        self._input.stopEditing()
-
-    def moveUp(self):
-        self.position.y = (self.position.y - 1) % len(self.keys)
-
-    def moveDown(self):
-        self.position.y = (self.position.y + 1) % len(self.keys)
-
-    def realPosition(self):
-        return Point(min(self.position.x, len(self.keys[self.position.y]) - 1), self.position.y)
-
-    def moveLeft(self):
-        self.position.x = (self.realPosition().x - 1) % len(self.keys[self.position.y])
-
-    def moveRight(self):
-        self.position.x = (self.realPosition().x + 1) % len(self.keys[self.position.y])
-
-    def accept(self):
-        key = self.keys[self.realPosition().y][self.realPosition().x]
-        if key == "<":
-            self._input.delete()
-        elif key == "accept":
-            self._input.closeKeyboard()
-        else:
-            self._input.write(key)
-
-    def draw(self, anArea):
-        if not self._isOpen:
-            return
-        self.drawBorderAround(anArea)
-        keySize = Point(anArea.width // 10, anArea.height // 4)
-        keyArea = Area(0, 0, keySize.x, keySize.y)
-        for y, row in enumerate(self.keys):
-            for x, key in enumerate(row):
-                currentArea = anArea.shifted(x * keySize.x, y * keySize.y)
-                currentArea.width = keyArea.width
-                currentArea.height = keyArea.height
-                if Point(x, y) == self.realPosition():
-                    if key == "accept":
-                        currentArea.width *= 3
-                    self.applicationContext.drawArea((255, 255, 255), currentArea)
-                    textColor = (0, 0, 0)
-                else:
-                    light = 255 - ((abs(x - self.realPosition().x) + abs(y - self.realPosition().y)) * 20)
-                    textColor = (light, light, light)
-                self.applicationContext.drawText(key, textColor, 22, currentArea.shifted(8, 0))
-
-    def update(self, millisecondsSinceLastUpdate):
-        pass
-
-
-class FormComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aTitle, aListOfInputs, aKeybindMapper, anExitFunction):
-        assert len(aListOfInputs) > 0
-        self.applicationContext = anApplicationContext
-        self.title = aTitle
-        self.inputs = aListOfInputs
-        self.exitFunction = anExitFunction
-        self.currentInputIndex = 0
-        self.inputs[0].focus()
-        self.virtualKeyboard = VirtualKeyboardComponent(anApplicationContext)
-        self.leftCommandRepeater = HeldCommandRepeater(self.moveLeft, 250, 75)
-        self.rightCommandRepeater = HeldCommandRepeater(self.moveRight, 250, 75)
-        self.upCommandRepeater = HeldCommandRepeater(self.moveUp, 250, 75)
-        self.downCommandRepeater = HeldCommandRepeater(self.moveDown, 250, 75)
-        aKeybindMapper(self)
-
-    def startMovingDown(self):
-        self.downCommandRepeater.start()
-
-    def stopMovingDown(self):
-        self.downCommandRepeater.stop()
-
-    def startMovingUp(self):
-        self.upCommandRepeater.start()
-
-    def stopMovingUp(self):
-        self.upCommandRepeater.stop()
-
-    def startMovingLeft(self):
-        self.leftCommandRepeater.start()
-
-    def stopMovingLeft(self):
-        self.leftCommandRepeater.stop()
-
-    def startMovingRight(self):
-        self.rightCommandRepeater.start()
-
-    def stopMovingRight(self):
-        self.rightCommandRepeater.stop()
-
-    def exit(self):
-        if self.virtualKeyboard.isOpen():
-            self.virtualKeyboard.close()
-        else:
-            self.destroy()
-            self.exitFunction()
-
-    def moveDown(self):
-        if self.virtualKeyboard.isOpen():
-            self.virtualKeyboard.moveDown()
-        else:
-            self.inputs[self.currentInputIndex].unfocus()
-            self.currentInputIndex += 1
-            self.currentInputIndex = self.currentInputIndex % len(self.inputs)
-            self.inputs[self.currentInputIndex].focus()
-
-    def moveUp(self):
-        if self.virtualKeyboard.isOpen():
-            self.virtualKeyboard.moveUp()
-        else:
-            self.inputs[self.currentInputIndex].unfocus()
-            self.currentInputIndex -= 1
-            self.currentInputIndex = self.currentInputIndex % len(self.inputs)
-            self.inputs[self.currentInputIndex].focus()
-
-    def moveLeft(self):
-        if self.virtualKeyboard.isOpen():
-            self.virtualKeyboard.moveLeft()
-
-    def moveRight(self):
-        if self.virtualKeyboard.isOpen():
-            self.virtualKeyboard.moveRight()
-
-    def accept(self):
-        if self.virtualKeyboard.isOpen():
-            self.virtualKeyboard.accept()
-        else:
-            self.inputs[self.currentInputIndex].accept(self)
-
-    def openVirtualKeyboardWith(self, anInput):
-        self.virtualKeyboard.openWith(anInput)
-
-    def closeVirtualKeyboard(self):
-        self.virtualKeyboard.close()
-
-    def draw(self, anArea):
-        currentArea = anArea.copy()
-        currentArea.height = 40
-        self.applicationContext.drawText(self.title, (255, 255, 255), 38, currentArea.shifted(20, 0))
-        currentArea = currentArea.shifted(0, 50)
-        currentArea.height = 30
-        for input in self.inputs:
-            input.draw(currentArea)
-            currentArea = currentArea.shifted(0, 30)
-
-        keyboardHeight = anArea.width // 10 * 4
-        self.virtualKeyboard.draw(Area(anArea.x, anArea.y + anArea.height - keyboardHeight, anArea.width, keyboardHeight))
-
-    def update(self, millisecondsSinceLastUpdate):
-        self.leftCommandRepeater.update(millisecondsSinceLastUpdate)
-        self.rightCommandRepeater.update(millisecondsSinceLastUpdate)
-        self.upCommandRepeater.update(millisecondsSinceLastUpdate)
-        self.downCommandRepeater.update(millisecondsSinceLastUpdate)
-
-    def destroy(self):
-        self.applicationContext.inputObserver.removeFrom(self)
-
-
-class InputComponent(DesktopComponent):
-    @abstractmethod
-    def focus(self):
-        pass
-
-    @abstractmethod
-    def unfocus(self):
-        pass
-
-    @abstractmethod
-    def accept(self, aForm):
-        pass
-
-
-class ButtonComponent(InputComponent):
-    def __init__(self, anApplicationContext, aName, anAction):
-        self.applicationContext = anApplicationContext
-        self.name = aName
-        self.action = anAction
-        self.focused = False
-        self.enabled = True
-        self.failed = False
-
-    def focus(self):
-        self.focused = True
-
-    def unfocus(self):
-        self.focused = False
-
-    def accept(self, aForm):
-        if self.enabled:
-            self.action()
-
-    def disable(self):
-        self.enabled = False
-
-    def enable(self):
-        self.enabled = True
-
-    def fail(self):
-        self.failed = True
-
-    def draw(self, anArea):
-        if self.focused:
-            textColor = (0, 0, 0)
-            rectColor = (255, 255, 255)
-            if not self.enabled:
-                rectColor = (100, 100, 100)
-        else:
-            textColor = (255, 255, 255)
-            rectColor = (0, 0, 0)
-
-        if self.failed:
-            textColor = (255, 0, 0)
-
-        self.applicationContext.drawArea(rectColor, anArea)
-        self.applicationContext.drawText(self.name, textColor, 24, anArea.withPadding(20, 0))
-
-    def update(self, millisecondsSinceLastUpdate):
-        pass
-
-
-class TextInputComponent(InputComponent):
-    def __init__(self, anApplicationContext, aName):
-        self.applicationContext = anApplicationContext
-        self.name = aName
-        self.focused = False
-        self.borderWidth = 2
-        self.text = ""
-        self.editing = False
-
-    def value(self):
-        return self.text
-
-    def focus(self):
-        self.focused = True
-
-    def unfocus(self):
-        self.focused = False
-
-    def accept(self, aForm):
-        self.form = aForm
-        self.form.openVirtualKeyboardWith(self)
-        self.editing = True
-
-    def delete(self):
-        self.text = self.text[0:-1]
-
-    def closeKeyboard(self):
-        self.form.closeVirtualKeyboard()
-
-    def stopEditing(self):
-        self.editing = False
-
-    def write(self, aString):
-        self.text += aString
-
-    def draw(self, anArea):
-        if self.focused:
-            textColor = (255, 255, 255)
-            outerAreaColor = (255, 255, 255)
-            innerAreaColor = (0, 0, 0)
-        else:
-            textColor = (0, 0, 0)
-            outerAreaColor = (0, 0, 0)
-            innerAreaColor = (255, 255, 255)
-
-        self.applicationContext.drawArea(outerAreaColor, anArea)
-        self.applicationContext.drawArea(innerAreaColor, anArea.withPadding(15, 3))
-
-        text = self.text
-        if self.text == "" and not self.editing:
-            text = self.name
-            textColor = (150, 150, 150)
-
-        currentArea = anArea.withPadding(20, 0)
-        for c in text:
-            self.applicationContext.drawText(c, textColor, 24, currentArea)
-            currentArea = currentArea.shifted(12, 0)
-
-        if self.editing:
-            cursor = currentArea.copy().shifted(0, 6)
-            cursor.width = 10
-            cursor.height = 18
-            self.applicationContext.drawArea(textColor, cursor)
-
-    def update(self, millisecondsSinceLastUpdate):
-        pass
-
-
-class UserSelectMenuComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aCellSize, aKeybindMapper, aFunctionToOpenLogin, aFunctionToOpenRegister, aPlayWithFunction, anExitFunction):
-        self.applicationContext = anApplicationContext
-        self.cellSize = aCellSize
-        self.borderColor = (255, 255, 255)
-        self.borderWidth = 2
-        self.playWith = aPlayWithFunction
-        self.buttons = [
-            ButtonComponent(anApplicationContext, "Login", aFunctionToOpenLogin),
-            ButtonComponent(anApplicationContext, "Register", aFunctionToOpenRegister)
-        ]
-        self.applicationContext.savedSessions.do(
-            lambda session: self.buttons.insert(0,
-                ButtonComponent(anApplicationContext, session.user().name(), lambda: self.loginWithSession(session))
-            )
-        )
-        self.form = FormComponent(anApplicationContext, "Select User", self.buttons, aKeybindMapper, anExitFunction)
-
-    def loginWithSession(self, aSession):
-        if self.applicationContext.savedSessions.isUsing(aSession):
-            for button in self.buttons:
-                if button.name == aSession.user().name():
-                    button.fail()
-        else:
-            self.playWith(aSession)
-
-    def draw(self, anArea):
-        self.form.draw(anArea)
-
-    def update(self, millisecondsSinceLastUpdate):
-        self.form.update(millisecondsSinceLastUpdate)
-
-    def destroy(self):
-        self.form.destroy()
-
-
-class UserSelectComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, anAmmountOfRows, anAmmountOfCols, aCellSize, aKeybindMapper, aPlayWithFunction, anExitFunction):
-        self.applicationContext = anApplicationContext
-        self.rows = anAmmountOfRows
-        self.cols = anAmmountOfCols
-        self.cellSize = aCellSize
-        self.keybindMapper = aKeybindMapper
-        self.playWith = aPlayWithFunction
-        self.exitFunction = anExitFunction
-        self.borderColor = (255, 255, 255)
-        self.borderWidth = 2
-        self.openSelectMenu()
-
-    def openSelectMenu(self):
-        self.component = UserSelectMenuComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.openLogin, self.openRegister, self.playWith, self.exitFunction)
-
-    def area(self):
-        return Area(0, 0, self.cellSize * self.cols, self.cellSize * (self.rows + 2))
-
-    def centeredArea(self, anotherArea):
-        return self.area().centeredAt(anotherArea)
-
-    def areaWithoutVanishZone(self, anotherArea):
-        centeredBoardArea = self.centeredArea(anotherArea)
-        return Area(
-            centeredBoardArea.x,
-            centeredBoardArea.y + self.cellSize * 2,
-            centeredBoardArea.width,
-            centeredBoardArea.height - self.cellSize * 2
-        )
-
-    def openLogin(self):
-        self.component.destroy()
-        self.component = LoginComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.playWith, self.openSelectMenu)
-
-    def openRegister(self):
-        self.component.destroy()
-        self.component = RegisterComponent(self.applicationContext, self.cellSize, self.keybindMapper, self.playWith, self.openSelectMenu)
-
-    def draw(self, anArea):
-        centeredArea = self.areaWithoutVanishZone(anArea)
-        self.drawBorderAround(centeredArea)
-        self.component.draw(centeredArea)
-
-    def update(self, millisecondsSinceLastUpdate):
-        self.component.update(millisecondsSinceLastUpdate)
-
-    def destroy(self):
-        self.component.destroy()
 
 
 class DeviceComponent(DesktopComponent):
@@ -550,7 +28,7 @@ class DeviceComponent(DesktopComponent):
             self.rows,
             self.cols,
             self.cellSize,
-            self.mapUserSelectComponent,
+            self.mapForm,
             self.playWith,
             self.deletionFunction
         )
@@ -582,7 +60,8 @@ class DeviceComponent(DesktopComponent):
             ColorScheme(),
             self.restartGame,
             self.deletionFunction,
-            self.session
+            self.session,
+            self.mapForm
         )
 
     def restartGame(self):
@@ -610,51 +89,51 @@ class DeviceComponent(DesktopComponent):
         if self.session is not None:
             self.applicationContext.savedSessions.stopUsing(self.session)
 
-    def mapUserSelectComponent(self, aUserSelectComponent):
+    def mapForm(self, aForm):
         if self.device == 100:
-            self.mapKeydown(pygame.K_UP, aUserSelectComponent.startMovingUp, aUserSelectComponent)
-            self.mapKeydown(pygame.K_w, aUserSelectComponent.startMovingUp, aUserSelectComponent)
-            self.mapKeydown(pygame.K_DOWN, aUserSelectComponent.startMovingDown, aUserSelectComponent)
-            self.mapKeydown(pygame.K_s, aUserSelectComponent.startMovingDown, aUserSelectComponent)
-            self.mapKeydown(pygame.K_LEFT, aUserSelectComponent.startMovingLeft, aUserSelectComponent)
-            self.mapKeydown(pygame.K_a, aUserSelectComponent.startMovingLeft, aUserSelectComponent)
-            self.mapKeydown(pygame.K_RIGHT, aUserSelectComponent.startMovingRight, aUserSelectComponent)
-            self.mapKeydown(pygame.K_d, aUserSelectComponent.startMovingRight, aUserSelectComponent)
+            self.mapKeydown(pygame.K_UP, aForm.startMovingUp, aForm)
+            self.mapKeydown(pygame.K_w, aForm.startMovingUp, aForm)
+            self.mapKeydown(pygame.K_DOWN, aForm.startMovingDown, aForm)
+            self.mapKeydown(pygame.K_s, aForm.startMovingDown, aForm)
+            self.mapKeydown(pygame.K_LEFT, aForm.startMovingLeft, aForm)
+            self.mapKeydown(pygame.K_a, aForm.startMovingLeft, aForm)
+            self.mapKeydown(pygame.K_RIGHT, aForm.startMovingRight, aForm)
+            self.mapKeydown(pygame.K_d, aForm.startMovingRight, aForm)
 
-            self.mapKeyup(pygame.K_UP, aUserSelectComponent.stopMovingUp, aUserSelectComponent)
-            self.mapKeyup(pygame.K_w, aUserSelectComponent.stopMovingUp, aUserSelectComponent)
-            self.mapKeyup(pygame.K_DOWN, aUserSelectComponent.stopMovingDown, aUserSelectComponent)
-            self.mapKeyup(pygame.K_s, aUserSelectComponent.stopMovingDown, aUserSelectComponent)
-            self.mapKeyup(pygame.K_LEFT, aUserSelectComponent.stopMovingLeft, aUserSelectComponent)
-            self.mapKeyup(pygame.K_a, aUserSelectComponent.stopMovingLeft, aUserSelectComponent)
-            self.mapKeyup(pygame.K_RIGHT, aUserSelectComponent.stopMovingRight, aUserSelectComponent)
-            self.mapKeyup(pygame.K_d, aUserSelectComponent.stopMovingRight, aUserSelectComponent)
+            self.mapKeyup(pygame.K_UP, aForm.stopMovingUp, aForm)
+            self.mapKeyup(pygame.K_w, aForm.stopMovingUp, aForm)
+            self.mapKeyup(pygame.K_DOWN, aForm.stopMovingDown, aForm)
+            self.mapKeyup(pygame.K_s, aForm.stopMovingDown, aForm)
+            self.mapKeyup(pygame.K_LEFT, aForm.stopMovingLeft, aForm)
+            self.mapKeyup(pygame.K_a, aForm.stopMovingLeft, aForm)
+            self.mapKeyup(pygame.K_RIGHT, aForm.stopMovingRight, aForm)
+            self.mapKeyup(pygame.K_d, aForm.stopMovingRight, aForm)
 
-            self.mapKeydown(pygame.K_RETURN, aUserSelectComponent.accept, aUserSelectComponent)
-            self.mapKeydown(pygame.K_SPACE, aUserSelectComponent.accept, aUserSelectComponent)
-            self.mapKeydown(pygame.K_ESCAPE, aUserSelectComponent.exit, aUserSelectComponent)
+            self.mapKeydown(pygame.K_RETURN, aForm.accept, aForm)
+            self.mapKeydown(pygame.K_SPACE, aForm.accept, aForm)
+            self.mapKeydown(pygame.K_ESCAPE, aForm.exit, aForm)
         else:
-            self.mapKeydown("JOYSTICK_LEFT_STICK_UP", aUserSelectComponent.startMovingUp, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_HAT_UP", aUserSelectComponent.startMovingUp, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_LEFT_STICK_DOWN", aUserSelectComponent.startMovingDown, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_HAT_DOWN", aUserSelectComponent.startMovingDown, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_LEFT_STICK_LEFT", aUserSelectComponent.startMovingLeft, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_HAT_LEFT", aUserSelectComponent.startMovingLeft, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_LEFT_STICK_RIGHT", aUserSelectComponent.startMovingRight, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_HAT_RIGHT", aUserSelectComponent.startMovingRight, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_LEFT_STICK_UP", aForm.startMovingUp, aForm)
+            self.mapKeydown("JOYSTICK_HAT_UP", aForm.startMovingUp, aForm)
+            self.mapKeydown("JOYSTICK_LEFT_STICK_DOWN", aForm.startMovingDown, aForm)
+            self.mapKeydown("JOYSTICK_HAT_DOWN", aForm.startMovingDown, aForm)
+            self.mapKeydown("JOYSTICK_LEFT_STICK_LEFT", aForm.startMovingLeft, aForm)
+            self.mapKeydown("JOYSTICK_HAT_LEFT", aForm.startMovingLeft, aForm)
+            self.mapKeydown("JOYSTICK_LEFT_STICK_RIGHT", aForm.startMovingRight, aForm)
+            self.mapKeydown("JOYSTICK_HAT_RIGHT", aForm.startMovingRight, aForm)
 
-            self.mapKeyup("JOYSTICK_LEFT_STICK_UP", aUserSelectComponent.stopMovingUp, aUserSelectComponent)
-            self.mapKeyup("JOYSTICK_HAT_UP", aUserSelectComponent.stopMovingUp, aUserSelectComponent)
-            self.mapKeyup("JOYSTICK_LEFT_STICK_DOWN", aUserSelectComponent.stopMovingDown, aUserSelectComponent)
-            self.mapKeyup("JOYSTICK_HAT_DOWN", aUserSelectComponent.stopMovingDown, aUserSelectComponent)
-            self.mapKeyup("JOYSTICK_LEFT_STICK_LEFT", aUserSelectComponent.stopMovingLeft, aUserSelectComponent)
-            self.mapKeyup("JOYSTICK_HAT_LEFT", aUserSelectComponent.stopMovingLeft, aUserSelectComponent)
-            self.mapKeyup("JOYSTICK_LEFT_STICK_RIGHT", aUserSelectComponent.stopMovingRight, aUserSelectComponent)
-            self.mapKeyup("JOYSTICK_HAT_RIGHT", aUserSelectComponent.stopMovingRight, aUserSelectComponent)
+            self.mapKeyup("JOYSTICK_LEFT_STICK_UP", aForm.stopMovingUp, aForm)
+            self.mapKeyup("JOYSTICK_HAT_UP", aForm.stopMovingUp, aForm)
+            self.mapKeyup("JOYSTICK_LEFT_STICK_DOWN", aForm.stopMovingDown, aForm)
+            self.mapKeyup("JOYSTICK_HAT_DOWN", aForm.stopMovingDown, aForm)
+            self.mapKeyup("JOYSTICK_LEFT_STICK_LEFT", aForm.stopMovingLeft, aForm)
+            self.mapKeyup("JOYSTICK_HAT_LEFT", aForm.stopMovingLeft, aForm)
+            self.mapKeyup("JOYSTICK_LEFT_STICK_RIGHT", aForm.stopMovingRight, aForm)
+            self.mapKeyup("JOYSTICK_HAT_RIGHT", aForm.stopMovingRight, aForm)
 
-            self.mapKeydown("JOYSTICK_CROSS", aUserSelectComponent.accept, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_RIGHT_BUMPER", aUserSelectComponent.accept, aUserSelectComponent)
-            self.mapKeydown("JOYSTICK_CIRCLE", aUserSelectComponent.exit, aUserSelectComponent)
+            self.mapKeydown("JOYSTICK_CROSS", aForm.accept, aForm)
+            self.mapKeydown("JOYSTICK_RIGHT_BUMPER", aForm.accept, aForm)
+            self.mapKeydown("JOYSTICK_CIRCLE", aForm.exit, aForm)
 
     def mapGameComponent(self, aGameComponent):
         if self.device == 100:
@@ -672,7 +151,6 @@ class DeviceComponent(DesktopComponent):
             self.mapKeydown(pygame.K_UP, aGameComponent.rotateRight, aGameComponent)
             self.mapKeydown(pygame.K_LSHIFT, aGameComponent.hold, aGameComponent)
             self.mapKeydown(pygame.K_ESCAPE, aGameComponent.togglePause, aGameComponent)
-            self.mapKeydown(pygame.K_RETURN, aGameComponent.pauseAccept, aGameComponent)
         else:
             self.mapKeydown("JOYSTICK_LEFT_STICK_LEFT", aGameComponent.startMovingLeft, aGameComponent)
             self.mapKeyup("JOYSTICK_LEFT_STICK_LEFT", aGameComponent.stopMovingLeft, aGameComponent)
@@ -699,7 +177,6 @@ class DeviceComponent(DesktopComponent):
             self.mapKeydown("JOYSTICK_RIGHT_BUMPER", aGameComponent.rotateRight, aGameComponent)
             self.mapKeydown("JOYSTICK_PAUSE", aGameComponent.togglePause, aGameComponent)
             self.mapKeydown("JOYSTICK_TRIANGLE", self.restartGame, aGameComponent)
-            self.mapKeydown("JOYSTICK_CROSS", aGameComponent.pauseAccept, aGameComponent)
 
 
 class DeviceComponents:

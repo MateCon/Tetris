@@ -113,13 +113,13 @@ class PausedGameActions(GameActions):
         pass
 
     def startDropping(self):
-        self.gameComponent.pauseMoveDown()
+        pass
 
     def stopDropping(self):
         pass
 
     def hardDrop(self):
-        self.gameComponent.pauseMoveUp()
+        pass
 
     def rotateLeft(self):
         pass

@@ -12,7 +12,7 @@ import requests
 
 
 class GameComponent(DesktopComponent):
-    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper, aColorScheme, aRestartMethod, aDeleteMethod, aSession):
+    def __init__(self, anApplicationContext, aGame, anAmmountOfRows, anAmmountOfCols, cellSize, aTetrisEventNotifier, aKeybindMapper, aColorScheme, aRestartMethod, aDeleteMethod, aSession, aMenuKeybindMapper):
         super().__init__(anApplicationContext)
         self.rows = anAmmountOfRows
         self.cols = anAmmountOfCols
@@ -32,14 +32,13 @@ class GameComponent(DesktopComponent):
         self.dropCommandRepeater = HeldCommandRepeater(self.game.softDrop, 50, 33)
 
         self.gameActions = RunningGameActions(self, self.game)
-        self.tetrisEventNotifier.attachPlacedPieceEvent(self.gameActions.stopDropping)
+        self.tetrisEventNotifier.attachPlacedPieceEvent(self.stopDropping)
         aKeybindMapper(self)
 
         self.scoreTracker = GameScore(self.tetrisEventNotifier)
 
-        self.pauseComponent = PauseComponent(self.applicationContext, self, self.cellSize, aRestartMethod, aDeleteMethod)
+        self.pauseComponent = PauseComponent(self.applicationContext, self, self.cellSize, aRestartMethod, aDeleteMethod, aMenuKeybindMapper)
 
-        self.tetrisEventNotifier.attachLostEvent(self.pauseComponent.focusRestart)
         self.tetrisEventNotifier.attachLostEvent(self.togglePause)
         self.tetrisEventNotifier.attachLostEvent(self.saveResult)
 
@@ -109,20 +108,14 @@ class GameComponent(DesktopComponent):
         self.leftCommandRepeater.stop()
         self.rightCommandRepeater.stop()
         self.dropCommandRepeater.stop()
+
+        if not self.isPaused():
+            self.pauseComponent.createPausedForm()
+
         self.gameActions = self.gameActions.togglePause()
 
     def isPaused(self):
         return self.gameActions.isPaused()
-
-    def pauseMoveDown(self):
-        self.pauseComponent.moveDown()
-
-    def pauseMoveUp(self):
-        self.pauseComponent.moveUp()
-
-    def pauseAccept(self):
-        if self.isPaused():
-            self.pauseComponent.accept()
 
     def drawArea(self, aColor, anArea):
         self.applicationContext.drawArea(aColor, Area(
@@ -209,8 +202,6 @@ class GameComponent(DesktopComponent):
         return self.game.getNextSix()
 
     def timeToSoftDrop(self):
-        if self.game.willLock() and self.hasLockDelay:
-            return self.lockDelayFrames * (1000/60)
 
         gavityTable = [ 0.01667, 0.021017, 0.026977, 0.035256, 0.04693,
                         0.06361, 0.0879, 0.1236, 0.1775, 0.2598,
@@ -218,7 +209,12 @@ class GameComponent(DesktopComponent):
                         3.91 , 6.61, 11.43, 20.3 ]
         level = self.scoreTracker.level()
         gravity = gavityTable[min(level, len(gavityTable)) - 1]
-        return 1000/(60*gravity)
+        timeToSoftDrop = 1000/(60*gravity)
+
+        if self.game.willLock() and self.hasLockDelay:
+            timeToSoftDrop += self.lockDelayFrames * (1000/60)
+
+        return timeToSoftDrop
 
     def update(self, millisecondsSinceLastUpdate):
         self.timeSinceLastTick += millisecondsSinceLastUpdate
@@ -237,6 +233,8 @@ class GameComponent(DesktopComponent):
         if not self.isPaused() and not self.pauseComponent.lost():
             self.time = self.time + Time.fromMilliseconds(millisecondsSinceLastUpdate)
 
+        self.pauseComponent.update(millisecondsSinceLastUpdate)
+
     def destroy(self):
         self.applicationContext.inputObservers.removeFrom(self)
 
@@ -248,7 +246,7 @@ class GameComponent(DesktopComponent):
                 "lines": self.scoreTracker.lines(),
                 "time": self.time.totalMilliseconds()
             }
-            requests.post(f"https://127.0.0.1:5000/result?session={self.session.id()}", json=body, verify=False)
+            requests.post(f"https://tetris-production-8c02.up.railway.app/result?session={self.session.id()}", json=body, verify=False)
 
         threading.Thread(
             target=lambda: submitResult(),

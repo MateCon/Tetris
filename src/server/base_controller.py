@@ -84,7 +84,6 @@ class BaseController:
 
         if not isinstance(body, dict):
             raise ExpectedJSONDictAsBody
-        print(body)
 
         score = body.get("score")
         if score is None:
