@@ -2,3 +2,4 @@ pygame
 pyinstaller
 requests
 platformdirs
+python-dotenv

@@ -1,5 +1,5 @@
 from desktop.desktop_component import DesktopComponent
-from server.session_serialization import SessionDeserializer
+from server.serialization import SessionDeserializer
 from desktop.form_component import FormComponent, TextInputComponent, ButtonComponent
 from desktop.area import Area
 import threading
@@ -37,7 +37,7 @@ class LoginComponent(DesktopComponent):
             "name": aName,
             "password": aPassword
         }
-        response = requests.post("https://tetris-production-8c02.up.railway.app/login", json=body, verify=False)
+        response = requests.post(f"{self.applicationContext.apiUrl}/login", json=body, verify=False)
         self.response = response.content
         self.hasRegistered = True
         self.submitButton.enable()
@@ -93,7 +93,7 @@ class RegisterComponent(DesktopComponent):
             "name": aName,
             "password": aPassword
         }
-        response = requests.post("https://tetris-production-8c02.up.railway.app/register", json=body, verify=False)
+        response = requests.post(f"{self.applicationContext.apiUrl}/register", json=body, verify=False)
         self.response = response.content
         self.hasRegistered = True
         self.submitButton.enable()

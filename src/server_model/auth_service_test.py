@@ -1,6 +1,4 @@
-from server_model.user_base import UserBase
 from server_model.user import User, NameTooShort
-from server_model.session_registry import SessionRegistry
 from server_model.hash import HashStub
 from server_model.clock import ClockStub
 from server_model.id_generator import AutoincrementalIdGenerator
@@ -12,16 +10,13 @@ import pytest
 class TestAuthService:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.sessionRegistry = SessionRegistry(ClockStub(2025, 12, 23), AutoincrementalIdGenerator())
-        self.hashStrategy = HashStub()
-        self.userBase = UserBase(self.sessionRegistry, self.hashStrategy)
         self.db = MockDatabase()
-        self.authService = AuthService(self.db, self.userBase, self.sessionRegistry)
+        self.authService = AuthService(self.db, ClockStub(2025, 12, 23), AutoincrementalIdGenerator(), HashStub())
 
     def test01a_UserCanBeRegistered(self):
         self.authService.register("Jack", "password")
 
-        assert self.userBase.includes("Jack")
+        assert self.authService.userBase().includes("Jack")
         assert self.db.userRepository().includes("Jack")
 
     def test01b_WhenAUserRegistersASessionIsCreated(self):
@@ -34,7 +29,7 @@ class TestAuthService:
         with pytest.raises(NameTooShort):
             self.authService.register("Ja", "password")
 
-        assert not self.userBase.includes("Jack")
+        assert not self.authService.userBase().includes("Jack")
         assert not self.db.userRepository().includes("Ja")
 
     def test03_IfTheDatabaseFailsAddingTheUserNothingIsStored(self):
@@ -43,9 +38,9 @@ class TestAuthService:
         with pytest.raises(Exception):
             self.authService.register("Jack", "password")
 
-        assert self.userBase.isEmpty()
+        assert self.authService.userBase().isEmpty()
         assert self.db.userRepository().isEmpty()
-        assert self.sessionRegistry.isEmpty()
+        assert self.authService.sessionRegistry().isEmpty()
         assert self.db.sessionRepository().isEmpty()
 
     def test04_IfTheDatabaseFailsAddingTheSessionTheItIsNotStoredInTheRegistry(self):
@@ -54,16 +49,16 @@ class TestAuthService:
         with pytest.raises(Exception):
             self.authService.register("Jack", "password")
 
-        assert self.userBase.includes("Jack")
+        assert self.authService.userBase().includes("Jack")
         assert self.db.userRepository().includes("Jack")
-        assert self.sessionRegistry.isEmpty()
+        assert self.authService.sessionRegistry().isEmpty()
         assert self.db.sessionRepository().isEmpty()
 
     def test05_IfAUserCanNotLogInNoSessionIsStored(self):
         with pytest.raises(Exception):
             self.authService.login("Jack", "password")
 
-        assert self.sessionRegistry.isEmpty()
+        assert self.authService.sessionRegistry().isEmpty()
         assert self.db.sessionRepository().isEmpty()
 
     def test06_UserCanLogInIfAUserRegisteredBefore(self):
@@ -81,12 +76,12 @@ class TestAuthService:
         with pytest.raises(Exception):
             self.authService.login("Jack", "password")
 
-        assert self.sessionRegistry.size() == 1
+        assert self.authService.sessionRegistry().size() == 1
         assert self.db.sessionRepository().size() == 1
 
     def test08_UserCanLogInIfAUserWasRegisteredOnTheDatabaseBeforeTheCreationOfTheService(self):
-        self.db.userRepository().insert(User("Jack", self.hashStrategy.hash("password")))
-        self.authService = AuthService(self.db, self.userBase, self.sessionRegistry)
+        self.db.userRepository().insert(User("Jack", HashStub().hash("password")))
+        self.authService = AuthService(self.db, ClockStub(2025, 12, 23), AutoincrementalIdGenerator(), HashStub())
 
         session = self.authService.login("Jack", "password")
 

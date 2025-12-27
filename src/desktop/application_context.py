@@ -2,9 +2,10 @@ import pygame
 
 
 class ApplicationContext:
-    def __init__(self, aScreen, aFrameRate, anInputObserver, aJoystickDictionary, aJoystickLifecycleObserver, aResourcePathMethod, someSavedSessions):
+    def __init__(self, aScreen, aFrameRate, anApiUrl, anInputObserver, aJoystickDictionary, aJoystickLifecycleObserver, aResourcePathMethod, someSavedSessions):
         self.screen = aScreen
         self.frameRate = aFrameRate
+        self.apiUrl = anApiUrl
         self.inputObserver = anInputObserver
         self.joysticks = aJoystickDictionary
         self.joystickLifecycleObserver = aJoystickLifecycleObserver

@@ -10,7 +10,7 @@ import sys
 
 
 class DesktopApplicationRunner:
-    def __init__(self):
+    def __init__(self, anApiUrl):
         pygame.init()
         pygame.display.set_caption("Tetris")
         pygame.display.set_icon(pygame.image.load(self.resourcePath("assets/images/logo.png")))
@@ -23,6 +23,7 @@ class DesktopApplicationRunner:
         self.applicationContext = ApplicationContext(
             pygame.display.set_mode(),
             60,
+            anApiUrl,
             InputObserver(),
             self.joysticks,
             self.joystickLifecycleObserver,

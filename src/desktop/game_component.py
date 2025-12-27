@@ -7,8 +7,10 @@ from desktop.game_actions import RunningGameActions
 from desktop.pause_component import PauseComponent
 from tetris_model.game_score import GameScore
 from tetris_model.time import Time
+from server.serialization import LeaderboardDeserializer
 import threading
 import requests
+import json
 
 
 class GameComponent(DesktopComponent):
@@ -24,6 +26,7 @@ class GameComponent(DesktopComponent):
         self.timeSinceLastTick = 0
         self.inputObserver = self.applicationContext.inputObserver
         self.tetrisEventNotifier = aTetrisEventNotifier
+        self.keybindMapper = aKeybindMapper
         self.nextPieceDisplayComponent = NextPieceDisplayComponent(self.applicationContext, self, self.nextSixPieces(), self.cellSize, self.colorScheme)
         self.heldPieceDisplayComponent = HeldPieceDisplayComponent(self.applicationContext, self, self.getHeldPiece(), self.cellSize, self.colorScheme)
 
@@ -48,6 +51,8 @@ class GameComponent(DesktopComponent):
         self.hasLockDelay = True
         self.lockDelayFrames = 8
         self.hasInfinity = True
+
+        self.updateLeaderboard()
 
     def tick(self):
         self.infinityCancelCount = 0
@@ -110,7 +115,10 @@ class GameComponent(DesktopComponent):
         self.dropCommandRepeater.stop()
 
         if not self.isPaused():
+            self.applicationContext.inputObserver.removeFrom(self)
             self.pauseComponent.createPausedForm()
+        else:
+            self.keybindMapper(self)
 
         self.gameActions = self.gameActions.togglePause()
 
@@ -185,6 +193,7 @@ class GameComponent(DesktopComponent):
         )
 
         self.drawBoard(self.centeredArea(anArea))
+
         self.drawBorderAround(self.areaWithoutVanishZone(anArea))
         self.nextPieceDisplayComponent.draw(
             self.centeredArea(anArea)
@@ -246,10 +255,24 @@ class GameComponent(DesktopComponent):
                 "lines": self.scoreTracker.lines(),
                 "time": self.time.totalMilliseconds()
             }
-            requests.post(f"https://tetris-production-8c02.up.railway.app/result?session={self.session.id()}", json=body, verify=False)
+            jsonResponse = requests.post(f"{self.applicationContext.apiUrl}/result?session={self.session.id()}", json=body, verify=False)
+            response = json.loads(jsonResponse.content)
+            leaderboard = LeaderboardDeserializer(response["leaderboard"]).deserialize()
+            self.pauseComponent.setLeaderboard(leaderboard)
 
         threading.Thread(
             target=lambda: submitResult(),
             daemon=True
         ).start()
 
+    def updateLeaderboard(self):
+        def fetchLeaderboard():
+            jsonResponse = requests.get(f"{self.applicationContext.apiUrl}/leaderboard?session={self.session.id()}", verify=False)
+            response = json.loads(jsonResponse.content)
+            leaderboard = LeaderboardDeserializer(response).deserialize()
+            self.pauseComponent.setLeaderboard(leaderboard)
+
+        threading.Thread(
+            target=lambda: fetchLeaderboard(),
+            daemon=True
+        ).start()

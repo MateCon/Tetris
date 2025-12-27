@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from server_model.game_result import GameResult
 from server_model.session_registry import SessionNotFound
 from server_model.user import User
 from server_model.session import Session
@@ -88,7 +89,11 @@ class MockSessionRepository(SessionRepository):
 
 class ResultRepository(ABC):
     @abstractmethod
-    def insert(self, aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds) -> None:
+    def insert(self, aGameResult):
+        pass
+
+    @abstractmethod
+    def selectAll(self) -> list[GameResult]:
         pass
 
 
@@ -96,15 +101,14 @@ class MockResultRepository(ResultRepository):
     def __init__(self):
         self._results = []
 
-    def insert(self, aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds):
-        self._results.append((aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds))
+    def insert(self, aGameResult):
+        self._results.append(aGameResult)
 
-    def includes(self, aUserName, aScore, aLevel, anAmmountOfLines, aCreationDate, aTimeInMilliseconds):
-        for result in self._results:
-            if result[0] == aUserName and result[1] == aScore and result[2] == aLevel and result[3] == anAmmountOfLines and result[4] == aCreationDate and result[5] == aTimeInMilliseconds:
-                return True
-        return False
+    def includes(self, aGameResult):
+        return aGameResult in self._results
 
+    def selectAll(self):
+        return self._results
 
 
 class Database(ABC):

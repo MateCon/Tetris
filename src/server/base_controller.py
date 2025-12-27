@@ -1,13 +1,12 @@
 from flask import request
-from server.session_serialization import SessionSerializer
+from server.serialization import LeaderboardSerializer, SessionSerializer
 from server_model.auth_service import AuthService
 from server_model.clock import Clock
 from server_model.hash import ArgonHash
 from server_model.id_generator import SecretIdGenerator
 from server_model.result_service import ResultService
-from server_model.user_base import NameTaken, UserBase, UserNotFound, WrongPassword, PasswordTooShort, PasswordTooLong
+from server_model.user_base import NameTaken, UserNotFound, WrongPassword, PasswordTooShort, PasswordTooLong
 from server_model.user import NameTooShort, NameTooLong
-from server_model.session_registry import SessionRegistry
 from server.server_errors import ExpectedBodyParameter, ExpectedQueryParameter, ExpectedJSONDictAsBody
 import json
 
@@ -17,9 +16,7 @@ class BaseController:
         self.app = app
         self.database = aDatabase
         self.clock = Clock()
-        self.sessionRegistry = SessionRegistry(self.clock, SecretIdGenerator())
-        self.userBase = UserBase(self.sessionRegistry, ArgonHash())
-        self.authService = AuthService(self.database, self.userBase, self.sessionRegistry)
+        self.authService = AuthService(self.database, self.clock, SecretIdGenerator(), ArgonHash())
         self.resultService = ResultService(self.database, self.authService, self.clock)
 
         self.app.add_url_rule(aBaseUrl + "", view_func=self.hello_world)
@@ -35,6 +32,7 @@ class BaseController:
         self.app.register_error_handler(WrongPassword, self.wrongPasswordHandler)
 
         self.app.add_url_rule(aBaseUrl + "result", view_func=self.result, methods=["POST"])
+        self.app.add_url_rule(aBaseUrl + "leaderboard", view_func=self.getLeaderboard, methods=["GET"])
 
     def hello_world(self):
         return "Hello, World!!"
@@ -103,7 +101,12 @@ class BaseController:
 
         self.resultService.save(sessionId, score, level, lines, time)
 
-        return "Time saved"
+        return json.dumps({
+            "leaderboard": LeaderboardSerializer(self.resultService.leaderboard()).serialize()
+        })
+
+    def getLeaderboard(self):
+        return json.dumps(LeaderboardSerializer(self.resultService.leaderboard()).serialize())
 
     def nameTakenHandler(self, error):
         return "Name already taken, pick another one", 400

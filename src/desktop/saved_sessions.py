@@ -1,5 +1,5 @@
 from server_model.clock import Clock
-from server.session_serialization import SessionDeserializer, SessionSerializer
+from server.serialization import SessionDeserializer, SessionSerializer
 import platformdirs
 from pathlib import Path
 from datetime import datetime, timedelta
